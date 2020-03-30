@@ -31,9 +31,11 @@ bool is_legal(int grid[SIZE][SIZE], int row, int col, int number);
 bool fill_grid(int grid[SIZE][SIZE]);		// Create random grid of numbers
 void shuffle(int arr[SIZE]);				// Shuffle array of numbers
 void swap(int *a, int *b);					// Swap two variables
-void print_grid(int grid[SIZE][SIZE]);		
+void print_grid(int grid[SIZE][SIZE]);	
 
 /*************** Function Definitions **************/
+
+
 // Initialize empty 9x9 matrix
 void create_grid(){
 	for (int row = 0; row < SIZE; row++){
@@ -55,33 +57,6 @@ bool check_full(int grid[SIZE][SIZE]){
 	return true;
 }
 
-// Checks if number to be inserted is legal (check row, column, subgrid)
-bool is_legal(int grid[SIZE][SIZE], int row, int col, int number){
-	// Check if number has already occured in its row
-	for (int COL = 0; COL < SIZE; COL++){
-		if (grid[row][COL] == number){
-			return false;
-		}
-	}
-	// Next check if number has occured in its column
-	for (int ROW = 0; ROW < SIZE; ROW++){
-		if (grid[ROW][col] == number){
-			return false;
-		}
-	}
-	// Finally, check if number has occured in its subgrid
-	int subgrid_row_start = row - (row % 3);
-	int subgrid_col_start = col - (col % 3);
-	for (int ROW = subgrid_row_start; ROW < subgrid_row_start + 3; ROW++){
-		for (int COL = subgrid_col_start; COL < subgrid_col_start + 3; COL++){
-			if (grid[ROW][COL] == number){
-				return false;
-			}
-		}
-	}
-	// All conditions passed
-	return true;
-}
 
 // Shuffle the contents of an array
 void shuffle(int arr[SIZE]){
@@ -120,19 +95,75 @@ bool sudoku_solver(int grid[SIZE][SIZE]){
 					// Recursively call this function
 						if (sudoku_solver(grid)) return true;
 					}
-					grid[row][col] = UNASSIGNED;
 				}
 			}
+			// All numbers in this position is invalid; grid must be redrawn
+			break;
 		}
-		// All numbers in this position is invalid; grid must be redrawn
-		// Triggers backtracking
-		return false;
+	}
+	// Redraw this square
+	grid[row][col] = UNASSIGNED;
+	return false;
+}
+
+// Checks if number to be inserted is legal (check row, column, subgrid)
+bool is_legal(int grid[SIZE][SIZE], int row, int col, int number){
+	// Check if number has already occured in its row
+	for (int COL = 0; COL < SIZE; COL++){
+		if (grid[row][COL] == number){
+			return false;
+		}
+	}
+	// Next check if number has occured in its column
+	for (int ROW = 0; ROW < SIZE; ROW++){
+		if (grid[ROW][col] == number){
+			return false;
+		}
+	}
+	// Finally, check if number has occured in its subgrid
+	int subgrid_row_start = row - (row % 3);
+	int subgrid_col_start = col - (col % 3);
+	for (int ROW = subgrid_row_start; ROW < subgrid_row_start + 3; ROW++){
+		for (int COL = subgrid_col_start; COL < subgrid_col_start + 3; COL++){
+			if (grid[ROW][COL] == number){
+				return false;
+			}
+		}
+	}
+	// All conditions passed
+	return true;
+}
+// debugging
+void print_grid(int grid[SIZE][SIZE]){
+	char ROW[11];
+	printf ("%c\n", grid[0][0]);
+
+	for (int row=0; row<9; row++){
+		for (int i=0; i<11; i++){
+			if (i<3){
+				int c = grid[row][i];
+				printf("%d", c);
+			}
+			else if (i>3 && i<7){
+			    int c = grid[row][i-1];
+			    printf("%d", c);
+			}
+			else if (i>7){
+			    int c = grid[row][i-2];
+			    printf("%d", c);
+			}
+			else if (i == 3 || i==7) { printf("|");}
+		}
+		printf("\n");
+		if (row == 2 || row ==5){
+		printf("-----------\n");
+		}
 	}
 }
 
 // Create random grid
 bool fill_grid(int grid[SIZE][SIZE]){
-	int row, col;
+    int row, col;
 	int numbers[SIZE] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
 
 	for (int i = 0; i < GRID; i++){
@@ -151,33 +182,16 @@ bool fill_grid(int grid[SIZE][SIZE]){
 					// Recursively call this function
 						if (fill_grid(grid)) return true;
 					}
-					grid[row][col] = UNASSIGNED;
+				}
 			}
 			// All numbers in this position is invalid; grid must be redrawn
 			break;
 		}
 	}
-	//grid[row][col] = UNASSIGNED;
+	grid[row][col] = UNASSIGNED;
+	return false;
 }
 
-// debugging
-void print_grid(int grid[SIZE][SIZE]){
-	char ROW[11];
-	printf ("%c\n", grid[0][0]);
-
-	for (int row=0; row<9; row++){
-		for (int i=0; i<11; i++){
-			if (i!=3 && i!=7){
-				int c = grid[row][i];
-				printf("%d", c);
-			} else { printf("|");}
-		}
-		printf("\n");
-		if (row == 2 || row ==5){
-		printf("-----------\n");
-		}
-	}
-}
 // debugging
 int main(){
     create_grid();
