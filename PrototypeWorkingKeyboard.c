@@ -2,7 +2,11 @@
 
 /* function prototypes */
 void HEX_PS2(char, char, char);
-
+void plotPixel(int x, int y, short int lineColor);
+void clearScreen(short int colour);
+volatile int pixelBufferStart; // global variable
+int SCREEN_WIDTH = 320; //X
+int SCREEN_HEIGHT = 240; //Y
 /*******************************************************************************
 * This program demonstrates use of the PS/2 port by displaying the last three
 * bytes of data received from the PS/2 port on the HEX displays.
@@ -11,6 +15,10 @@ int main(void) {
 	/* Declare volatile pointers to I/O registers (volatile means that IO load
 	and store instructions will be used to access these pointer locations,
 	instead of regular memory loads and stores) */
+	volatile int * pixelCtrlPtr = (int *)0xFF203020;
+    /* Read location of the pixel buffer from the pixel buffer controller */
+    pixelBufferStart = *pixelCtrlPtr;
+	
 	volatile int * PS2_ptr = (int *)0xff200100;
 	
 	int PS2_data, RVALID;
@@ -110,18 +118,22 @@ void HEX_PS2(char b1, char b2, char b3) {
 		LED_bits = 0x0000001f;
 		shift_buffer = 0x0b645c;
 		letters = 1;
+		clearScreen(0x227B);
 	}else if(shift_buffer == 0xe0f06b){ //Go Left (light up LED9-5)
 		LED_bits = 0x000003e0;
 		shift_buffer = 0x00723c;
 		letters = 1;
+		clearScreen(0xD13B);
 	}else if(shift_buffer == 0xe0f075){ //Go Up (light up LED5-4)
 		LED_bits = 0x00000030;
 		shift_buffer = 0x0000da;
 		letters = 1;
+		clearScreen(0x3466);
 	}else if(shift_buffer == 0xe0f072){ //Go Down (light up LED9 & LED0)
 		LED_bits = 0x00000201;
 		shift_buffer = 0x019ef8;
 		letters =1;
+		clearScreen(0x0000);
 	}
 	
 	if(numbers){
@@ -151,4 +163,17 @@ void HEX_PS2(char b1, char b2, char b3) {
 	*(HEX3_HEX0_ptr) = *(int *)(hex_segs);
 	*(HEX5_HEX4_ptr) = *(int *)(hex_segs + 4);
 	*(LED_ptr) = LED_bits;
+}
+
+void clearScreen(short int colour)
+{
+	for(int i = 0; i < SCREEN_WIDTH; i++){
+        for(int j = 0; j  < SCREEN_HEIGHT; j++){
+            plotPixel(i, j, colour);
+        }
+    }
+}
+
+void plotPixel(int x, int y, short int lineColor){
+    *(short int *)(pixelBufferStart + (y << 10) + (x << 1)) = lineColor;
 }
