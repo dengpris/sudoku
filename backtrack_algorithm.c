@@ -21,12 +21,13 @@
 // We then use this to determine win state
 
 /**************** Global Variables ****************/
-int grid[SIZE][SIZE];
+int start[SIZE][SIZE];
+int solved[SIZE][SIZE];
 
 /************** Function Declarations *************/
 void create_grid();							// Creates empty 9x9 grid
 bool check_full(int grid[SIZE][SIZE]);		// Return true if grid is full
-bool sudoku_solver(int grid[SIZE][SIZE]);	// Backtrack algorithm
+int sudoku_solver(int grid[SIZE][SIZE]);	// Backtrack algorithm
 bool is_legal(int grid[SIZE][SIZE], int row, int col, int number);
 bool fill_grid(int grid[SIZE][SIZE]);		// Create random grid of numbers
 void shuffle(int arr[SIZE]);				// Shuffle array of numbers
@@ -40,7 +41,7 @@ void print_grid(int grid[SIZE][SIZE]);
 void create_grid(){
 	for (int row = 0; row < SIZE; row++){
 		for (int col = 0; col < SIZE; col++){
-			grid[row][col] = UNASSIGNED;
+			start[row][col] = UNASSIGNED;
 		}
 	}
 }
@@ -79,8 +80,10 @@ void swap(int *a, int *b){
 
 
 // Backtracking algorithm
-bool sudoku_solver(int grid[SIZE][SIZE]){
+// Used to test if starting numbers can generate unique solution
+int sudoku_solver(int grid[SIZE][SIZE]){
 	int row, col;
+	int counter = 0;
 	for (int i = 0; i < GRID; i++){
 		row = i / SIZE;
 		col = i % SIZE;
@@ -90,10 +93,11 @@ bool sudoku_solver(int grid[SIZE][SIZE]){
 				if (is_legal(grid, row, col, number)){
 					grid[row][col] = number;
 					if (check_full(grid)){
-						return true;
+						counter++;
+						break;
 					} else {
 					// Recursively call this function
-						if (sudoku_solver(grid)) return true;
+						return sudoku_solver(grid);
 					}
 				}
 			}
@@ -103,7 +107,7 @@ bool sudoku_solver(int grid[SIZE][SIZE]){
 	}
 	// Redraw this square
 	grid[row][col] = UNASSIGNED;
-	return false;
+	return counter;
 }
 
 // Checks if number to be inserted is legal (check row, column, subgrid)
@@ -135,22 +139,22 @@ bool is_legal(int grid[SIZE][SIZE], int row, int col, int number){
 }
 // debugging
 void print_grid(int grid[SIZE][SIZE]){
-	char ROW[11];
-	printf ("%c\n", grid[0][0]);
-
 	for (int row=0; row<9; row++){
 		for (int i=0; i<11; i++){
 			if (i<3){
 				int c = grid[row][i];
-				printf("%d", c);
+				if (c == UNASSIGNED) printf(" ");
+				else printf("%d", c);
 			}
 			else if (i>3 && i<7){
 			    int c = grid[row][i-1];
-			    printf("%d", c);
+			    if (c == UNASSIGNED) printf(" ");
+				else printf("%d", c);
 			}
 			else if (i>7){
 			    int c = grid[row][i-2];
-			    printf("%d", c);
+			    if (c == UNASSIGNED) printf(" ");
+				else printf("%d", c);
 			}
 			else if (i == 3 || i==7) { printf("|");}
 		}
@@ -161,7 +165,7 @@ void print_grid(int grid[SIZE][SIZE]){
 	}
 }
 
-// Create random grid
+// Create randomized grid of full solution
 bool fill_grid(int grid[SIZE][SIZE]){
     int row, col;
 	int numbers[SIZE] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -195,7 +199,46 @@ bool fill_grid(int grid[SIZE][SIZE]){
 // debugging
 int main(){
     create_grid();
-    fill_grid(grid);
-    print_grid(grid);
+    fill_grid(start);
+    
+    // Create a copy of the completed array
+    for (int row = 0; row < SIZE; row++){
+    	for (int col = 0; col < SIZE; col++){
+    		solved[row][col] = start[row][col];
+    	}
+    }
+
+    int erase = 5 * SIZE; // Number of positions that will be blank
+    int row, col;
+    int temp;				// Keeps a backup of a position
+
+    while (erase > 0){
+    	// Choose random position to erase
+    	row = rand() % SIZE;
+    	col = rand() % SIZE;
+    	// If this position is already empty, choose another
+    	while (start[row][col] == UNASSIGNED){
+    		row = rand() % SIZE;
+    		col = rand() % SIZE;
+    	}
+    	temp = start[row][col];
+    	start[row][col] = UNASSIGNED;
+
+    	// Copy this grid
+    	int grid_copy[SIZE][SIZE];
+    	for (int row = 0; row < SIZE; row++){
+    		for (int col = 0; col < SIZE; col++){
+    			grid_copy[row][col] = start[row][col];
+    		}
+    	}
+    	// Check for unique solution, if not, reroll a different number
+    	if (sudoku_solver(grid_copy) != 1) start[row][col] = temp;
+ 		else erase--;
+    }
+    printf("Starting grid: \n");
+    print_grid(start);
+    printf("Fully solved grid: \n");
+    print_grid(solved);
+
     return 0;
 }
