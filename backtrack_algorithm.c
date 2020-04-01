@@ -62,8 +62,6 @@ bool check_full(int grid[SIZE][SIZE]){
 // Shuffle the contents of an array
 void shuffle(int arr[SIZE]){
 	int n = SIZE;
-	// Generate a different seed value for uniqueness
-	srand (time(NULL));
 	for (int i = n-1; i > 0; i--){
 		// Random integer from 0 to i
 		int j = rand() % (i+1);
