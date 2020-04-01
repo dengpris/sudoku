@@ -21,8 +21,8 @@
 // We then use this to determine win state
 
 /**************** Global Variables ****************/
-int start[SIZE][SIZE];
-int solved[SIZE][SIZE];
+int start[SIZE][SIZE];  // Erased 
+int solved[SIZE][SIZE]; // Fully solved
 
 /************** Function Declarations *************/
 void create_grid();							// Creates empty 9x9 grid
@@ -61,6 +61,7 @@ bool check_full(int grid[SIZE][SIZE]){
 
 // Shuffle the contents of an array
 void shuffle(int arr[SIZE]){
+	srand(clock());
 	int n = SIZE;
 	for (int i = n-1; i > 0; i--){
 		// Random integer from 0 to i
@@ -233,6 +234,7 @@ int main(){
     	if (sudoku_solver(grid_copy) != 1) start[row][col] = temp;
  		else erase--;
     }
+    ///////////////////////////////////
     printf("Starting grid: \n");
     print_grid(start);
     printf("Fully solved grid: \n");
