@@ -1,7 +1,9 @@
 // Sudoku backtracking algorithm for 9x9 grid
-
 #include "backtrack_algorithm.h"
 
+int refresh = 0;
+
+/*************** Function Definitions **************/
 // Initialize empty 9x9 matrix
 void create_grid(){
 	for (int row = 0; row < SIZE; row++){
@@ -26,13 +28,15 @@ bool check_full(int grid[SIZE][SIZE]){
 
 // Shuffle the contents of an array
 void shuffle(int arr[SIZE]){
-	srand(clock());
+	// srand(clock()); // CPUlator does not support clock()
+	srand(time(NULL) + refresh);
 	int n = SIZE;
 	for (int i = n-1; i > 0; i--){
 		// Random integer from 0 to i
 		int j = rand() % (i+1);
 		swap(&arr[i], &arr[j]);
 	}
+	refresh++;
 }
 
 // Swap two integer values
@@ -45,7 +49,7 @@ void swap(int *a, int *b){
 
 // Backtracking algorithm
 // Used to test if starting numbers can generate unique solution
-int sudoku_solver(int grid[SIZE][SIZE]){
+void sudoku_solver(int grid[SIZE][SIZE]){
 	int row, col;
 	int counter = 0;
 	for (int i = 0; i < GRID; i++){
@@ -71,7 +75,6 @@ int sudoku_solver(int grid[SIZE][SIZE]){
 	}
 	// Redraw this square
 	grid[row][col] = UNASSIGNED;
-	return counter;
 }
 
 // Checks if number to be inserted is legal (check row, column, subgrid)
@@ -123,7 +126,7 @@ void print_grid(int grid[SIZE][SIZE]){
 			else if (i == 3 || i==7) { printf("|");}
 		}
 		printf("\n");
-		if (row == 2 || row ==5){
+		if (row == 2 || row == 5){
 		printf("-----------\n");
 		}
 	}
@@ -158,4 +161,14 @@ bool fill_grid(int grid[SIZE][SIZE]){
 	}
 	grid[row][col] = UNASSIGNED;
 	return false;
+}
+
+// Checks if playing grid is same as solved grid
+bool check_win(int grid[SIZE][SIZE]){
+	for (int row = 0; row < SIZE; row++){
+		for (int col = 0; col < SIZE; col++){
+			if (grid[SIZE][SIZE] != solved[SIZE][SIZE]) return false;
+		}
+	}
+	return true;
 }
