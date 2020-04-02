@@ -21,6 +21,7 @@
 
 extern int start[SIZE][SIZE];  // Erased 
 extern int solved[SIZE][SIZE]; // Fully solved
+extern int soln_count;
 
 /************** Function Declarations *************/
 void create_grid();							// Creates empty 9x9 grid
@@ -31,5 +32,4 @@ bool fill_grid(int grid[SIZE][SIZE]);		// Create random grid of numbers
 void shuffle(int arr[SIZE]);				// Shuffle array of numbers
 void swap(int *a, int *b);					// Swap two variables
 void print_grid(int grid[SIZE][SIZE]);	
-
-/*************** Function Definitions **************/
+bool check_win(int grid[SIZE][SIZE]);

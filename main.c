@@ -41,7 +41,8 @@ int main(){
     	}
     	// Check for unique solution, if not, reroll a different number
         soln_count = 0;
-    	if (sudoku_solver(grid_copy) != 1) start[row][col] = temp;
+        sudoku_solver(grid_copy);
+    	if (soln_count != 1) start[row][col] = temp;
  		else erase--;
     }
 
