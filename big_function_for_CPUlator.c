@@ -5718,22 +5718,31 @@ void HEX_PS2(char b1, char b2, char b3) {
 	shift_buffer = (b1 << 16) | (b2 << 8) | b3;
 	
 	//Write a number at selected position (select by arrowkes)
+	//Draw 1
 	if(shift_buffer == 0x16f016){ //Pressed 1
 		if(checkEmpty(idX,idY))drawNewNumbers(1, posX[idX], posY[idY]);
+	//Draw 2
 	}else if(shift_buffer == 0x1ef01e){ //Pressed 2
 		if(checkEmpty(idX, idY))drawNewNumbers(2, posX[idX], posY[idY]);
+	//Draw 3
 	}else if(shift_buffer == 0x26f026){ //Pressed 3
 		if(checkEmpty(idX, idY))drawNewNumbers(3, posX[idX], posY[idY]);
+	//Draw 4
 	}else if(shift_buffer == 0x25f025){ //Pressed 4
 		if(checkEmpty(idX, idY))drawNewNumbers(4, posX[idX], posY[idY]);
+	//Draw 5
 	}else if(shift_buffer == 0x2ef02e){ //Pressed 5
 		if(checkEmpty(idX, idY))drawNewNumbers(5, posX[idX], posY[idY]);
+	//Draw 6
 	}else if(shift_buffer == 0x36f036){ //Pressed 6
 		if(checkEmpty(idX, idY))drawNewNumbers(6, posX[idX], posY[idY]);
+	//Draw 7
 	}else if(shift_buffer == 0x3df03d){ //Pressed 7
 		if(checkEmpty(idX, idY))drawNewNumbers(7, posX[idX], posY[idY]);
+	//Draw 8
 	}else if(shift_buffer == 0x3ef03e){ //Pressed 8
 		if(checkEmpty(idX, idY))drawNewNumbers(8, posX[idX], posY[idY]);
+	//Draw 9
 	}else if(shift_buffer == 0x46f046){ //Pressed 9
 		if(checkEmpty(idX, idY))drawNewNumbers(9, posX[idX], posY[idY]);
 	}
