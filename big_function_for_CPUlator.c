@@ -5140,6 +5140,8 @@ const unsigned short Background[76800] ={
 /**************** Global Variables ****************/
 int start[SIZE][SIZE];  // Erased 
 int solved[SIZE][SIZE]; // Fully solved
+bool given[SIZE][SIZE];
+int soln_count;
 int refresh = 0;
 
 int SCREEN_WIDTH = 320; //X
@@ -5164,8 +5166,9 @@ void clearScreen(); //Draws black screen
 void plotPixel(int x, int y, short int lineColor);
 void draw_grid(int grid[SIZE][SIZE]);	//draws grid
 
-/*************** Function Definitions **************/
 
+
+/*************** Function Definitions **************/
 
 // Initialize empty 9x9 matrix
 void create_grid(){
@@ -5228,7 +5231,7 @@ int sudoku_solver(int grid[SIZE][SIZE]){
 						break;
 					} else {
 					// Recursively call this function
-						return sudoku_solver(grid);
+						sudoku_solver(grid);
 					}
 				}
 			}
@@ -5238,7 +5241,6 @@ int sudoku_solver(int grid[SIZE][SIZE]){
 	}
 	// Redraw this square
 	grid[row][col] = UNASSIGNED;
-	return counter;
 }
 
 // Checks if number to be inserted is legal (check row, column, subgrid)
@@ -5398,7 +5400,7 @@ int main(){
     	// Choose random position to erase
     	row = rand() % SIZE;
     	col = rand() % SIZE;
-    	// If this position si already empty, choose another
+    	// If this position is already empty, choose another
     	while (start[row][col] == UNASSIGNED){
     		row = rand() % SIZE;
     		col = rand() % SIZE;
@@ -5414,8 +5416,18 @@ int main(){
     		}
     	}
     	// Check for unique solution, if not, reroll a different number
-    	if (sudoku_solver(grid_copy) != 1) start[row][col] = temp;
+        soln_count = 0;
+        sudoku_solver(grid_copy);
+    	if (soln_count != 1) start[row][col] = temp;
  		else erase--;
+    }
+
+    // Copy into given grid
+    for (int row = 0; row < SIZE; row++){
+        for (int col = 0; col < SIZE; col++){
+            if (start[row][col] == UNASSIGNED) given[row][col] = false;
+            else given[row][col] = true;
+        }
     }
     ///////////////////////////////////
     drawBackground(); //Draws the background
