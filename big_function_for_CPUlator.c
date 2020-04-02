@@ -5700,6 +5700,7 @@ void drawBackground(){
 
 //Gets information from keyboard
 void HEX_PS2(char b1, char b2, char b3) {
+	
 	volatile int * HEX3_HEX0_ptr = (int *)0xff200020;
 	volatile int * HEX5_HEX4_ptr = (int *)0xff200030;
 	/* SEVEN_SEGMENT_DECODE_TABLE gives the on/off settings for all segments in
@@ -5716,6 +5717,7 @@ void HEX_PS2(char b1, char b2, char b3) {
 	
 	shift_buffer = (b1 << 16) | (b2 << 8) | b3;
 	
+	//Write a number at selected position (select by arrowkes)
 	if(shift_buffer == 0x16f016){ //Pressed 1
 		if(checkEmpty(idX,idY))drawNewNumbers(1, posX[idX], posY[idY]);
 	}else if(shift_buffer == 0x1ef01e){ //Pressed 2
@@ -5736,6 +5738,13 @@ void HEX_PS2(char b1, char b2, char b3) {
 		if(checkEmpty(idX, idY))drawNewNumbers(9, posX[idX], posY[idY]);
 	}
 	
+	//Erase a number at selected position (select by arrowkeys)
+	else if(shift_buffer == 0x66f066){
+		// The number 0 draws a blank square
+		if(checkEmpty(idX,idY))drawNewNumbers(0, posX[idX], posY[idY]);
+	}
+	
+	//Selecting Box in Grid 
 	else if(shift_buffer == 0xe0f074){  //Go Right (light up LED4-0)
 		if((idX)>=0 && idX != 8){
 			clearHighlight(idX,idY, 0xd77f);
