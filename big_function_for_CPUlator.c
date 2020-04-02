@@ -5217,7 +5217,6 @@ void swap(int *a, int *b){
 // Used to test if starting numbers can generate unique solution
 int sudoku_solver(int grid[SIZE][SIZE]){
 	int row, col;
-	int counter = 0;
 	for (int i = 0; i < GRID; i++){
 		row = i / SIZE;
 		col = i % SIZE;
@@ -5227,7 +5226,7 @@ int sudoku_solver(int grid[SIZE][SIZE]){
 				if (is_legal(grid, row, col, number)){
 					grid[row][col] = number;
 					if (check_full(grid)){
-						counter++;
+						soln_count++;
 						break;
 					} else {
 					// Recursively call this function
