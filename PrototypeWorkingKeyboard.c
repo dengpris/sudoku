@@ -2,6 +2,9 @@
 #include "stdbool.h"
 #include "stdio.h"
 
+//THE FOLLOWING ARRAY IS THE ARRAY OF IMAGES OF COLOURS 
+//USE THE WEBSITE: http://www.rinkydinkelectronics.com/t_imageconverter565.php
+
 //Include Background C array
 const unsigned short Background[76800] ={
 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,   // 0x0010 (16) pixels
@@ -5133,13 +5136,15 @@ void clearHighlight(int xStart, int yStart, short int colour);
 
 
 int main(void){
+    //Drawing Variables
     volatile int * pixelCtrlPtr = (int *)0xFF203020;
-    /* Read location of the pixel buffer from the pixel buffer controller */
     pixelBufferStart = *pixelCtrlPtr;
 	
-	//INITIAL DRAWING
-	clearScreen();
+	
+	//Draws the background
 	drawBackground();
+	
+	//Draws smaller images on top of the background
 	drawNewNumbers(1,posX[0],posY[3]);
 	drawNewNumbers(2,posX[1],posY[3]);
    	drawNewNumbers(3,posX[2],posY[3]);
@@ -5150,24 +5155,33 @@ int main(void){
 	drawNewNumbers(8,posX[7],posY[3]);
 	drawNewNumbers(9,posX[8],posY[3]);
 	
-	//CALL BACK FUNCTIONS
+	//CALL BACK FUNCTIONS FOR THE KEY BOARD
 	volatile int * PS2_ptr = (int *)0xff200100;
-	
 	int PS2_data, RVALID;
-	char byte1 = 0, byte2 = 0, byte3 = 0;
 	
-	// PS/2 mouse needs to be reset (must be already plugged in)
+	/*  Background Information: Each key on the keyboard has a specific data input. PS2_data is that data input
+	    This next part gets the individual bytes from that data and prints it onto the hex displays so that you can see the data input*/
+	    
+	char byte1 = 0, byte2 = 0, byte3 = 0;
 	*(PS2_ptr) = 0xFF; // reset
 	
+	//Always checking for keyboard input
 	while (1) {
+	    
 		PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
-		RVALID = PS2_data & 0x8000; // extract the RVALID field
+		RVALID = PS2_data & 0x8000; // extract the RVALID field (Checks if there was a change in keys? I think)
+		
 		if (RVALID) {
-			/* shift the next data byte into the display */
+		    
+			/* shift the next data byte into the HEX display */
 			byte1 = byte2;
 			byte2 = byte3;
 			byte3 = PS2_data & 0xFF;
+			
+			//Goes into hexdisplay function (this is where I tell the program what to do depending on which key is pressed)
 			HEX_PS2(byte1, byte2, byte3);
+			
+			//I honestly dont know what this does. it might just be for mouse stuff. You can try deleting it
 			if ((byte2 == (char)0xAA) && (byte3 == (char)0x00))
 				// mouse inserted; initialize sending of data
 				*(PS2_ptr) = 0xF4;
@@ -5177,8 +5191,11 @@ int main(void){
 }
 
 void HEX_PS2(char b1, char b2, char b3) {
+    
+    //Declaring hex pointers
 	volatile int * HEX3_HEX0_ptr = (int *)0xff200020;
 	volatile int * HEX5_HEX4_ptr = (int *)0xff200030;
+	
 	/* SEVEN_SEGMENT_DECODE_TABLE gives the on/off settings for all segments in
 	* a single 7-seg display in the DE1-SoC Computer, for the hex digits 0 - F
 	*/
@@ -5191,10 +5208,19 @@ void HEX_PS2(char b1, char b2, char b3) {
 	unsigned char code;
 	int i;
 	
+	
+	//THE SHIFT BUFFER IS THE DATA INPUT. THIS IS THE IMPORTANT ONE. 
 	shift_buffer = (b1 << 16) | (b2 << 8) | b3;
 	
+	/*Basically I wrote down the code ( data input) for the keys that i wanted. And if the shift_buffer is equal to that code, I do something */
+	
+	//Example: Code if number 1 is pressed is :16f016
 	if(shift_buffer == 0x16f016){ //Pressed 1
+		
+		//And then I draw the number 1 at that position
 		drawNewNumbers(1, posX[idX], posY[idY]);
+		
+		
 	}else if(shift_buffer == 0x1ef01e){ //Pressed 2
 		drawNewNumbers(2, posX[idX], posY[idY]);
 	}else if(shift_buffer == 0x26f026){ //Pressed 3
@@ -5213,7 +5239,8 @@ void HEX_PS2(char b1, char b2, char b3) {
 		drawNewNumbers(9, posX[idX], posY[idY]);
 	}
 	
-	else if(shift_buffer == 0xe0f074){  //Go Right (light up LED4-0)
+	//Same thing is happening here except for the arrow keys
+	else if(shift_buffer == 0xe0f074){  //Pressed Right
 		if((idX)>=0 && idX != 8){
 			clearHighlight(idX,idY, 0xd77f);
 		}
@@ -5221,7 +5248,7 @@ void HEX_PS2(char b1, char b2, char b3) {
 			idX++;
 			drawHighlight(idX,idY, 0x96bf);
 		}
-	}else if(shift_buffer == 0xe0f06b){ //Go Left (light up LED9-5)
+	}else if(shift_buffer == 0xe0f06b){ //Pressed Left
 		if((idX)<9 && idX != 0){
 			clearHighlight(idX,idY, 0xeedf);
 		}
@@ -5229,7 +5256,7 @@ void HEX_PS2(char b1, char b2, char b3) {
 			idX--;
 			drawHighlight(idX,idY, 0xC4BF);
 		}
-	}else if(shift_buffer == 0xe0f075){ //Go Up (light up LED5-4)
+	}else if(shift_buffer == 0xe0f075){ //Pressed UP
 		if((idY)<9 && idY != 0){
 			clearHighlight(idX,idY, 0xeedf);
 		}
@@ -5237,7 +5264,7 @@ void HEX_PS2(char b1, char b2, char b3) {
 			idY--;
 			drawHighlight(idX,idY, 0xC4BF);
 		}
-	}else if(shift_buffer == 0xe0f072){ //Go Down (light up LED9 & LED0)
+	}else if(shift_buffer == 0xe0f072){ //Pressed down
 		if((idY)>=0 && idY != 8){
 			clearHighlight(idX,idY, 0xd77f);
 		}
@@ -5247,6 +5274,8 @@ void HEX_PS2(char b1, char b2, char b3) {
 		}
 	}
 	
+	
+	//This sets up the hex displays so that you can see the code from the shift_buffer
 	for (i = 0; i < 6; ++i) {
 		nibble = shift_buffer & 0x0000000F; // character is in rightmost nibble
 		code = seven_seg_decode_table[nibble];
