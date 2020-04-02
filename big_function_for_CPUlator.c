@@ -1,6 +1,6 @@
-/* Note: This file is used for compiling in CPUlator.
-		All necessary code is displayed here. Do not make changes
-		to this file until you are sure everything works. */
+/* Note: 	This file is used for compiling in CPUlator.
+			All necessary code is displayed here. Do not make changes
+			to this file until you are sure everything works. */
 
 
 
@@ -29,6 +29,7 @@
 /**************** Global Variables ****************/
 int start[SIZE][SIZE];  // Erased 
 int solved[SIZE][SIZE]; // Fully solved
+int refresh = 0;
 
 /************** Function Declarations *************/
 void create_grid();							// Creates empty 9x9 grid
@@ -67,7 +68,7 @@ bool check_full(int grid[SIZE][SIZE]){
 
 // Shuffle the contents of an array
 void shuffle(int arr[SIZE]){
-	srand(clock());
+	srand(time(NULL)+refresh);
 	int n = SIZE;
 	for (int i = n-1; i > 0; i--){
 		// Random integer from 0 to i
@@ -221,7 +222,7 @@ int main(){
     	// Choose random position to erase
     	row = rand() % SIZE;
     	col = rand() % SIZE;
-    	// If this position is already empty, choose another
+    	// If this position si already empty, choose another
     	while (start[row][col] == UNASSIGNED){
     		row = rand() % SIZE;
     		col = rand() % SIZE;
