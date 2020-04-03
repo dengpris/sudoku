@@ -5480,6 +5480,7 @@ void draw_grid(int grid[SIZE][SIZE]);	//draws grid
 //Keyboard functions:
 void drawHighlight(int xStart, int yStart, short int colour);
 void clearHighlight(int xStart, int yStart, short int colour);
+void WIN_PS2(char b1, char b2, char b3);
 void HEX_PS2(char, char, char);
 bool checkEmpty(int Xindex, int Yindex); // Check if number can be drawn
 bool checkValid(int Xindex, int Yindex); // Check if number can be erased
@@ -5709,6 +5710,17 @@ void drawBackground(){
 			colourIdx++;
 		}
     }
+}
+// Gets information from keyboard in game win state
+void WIN_PS2(char b1, char b2, char b3){
+	
+	unsigned int shift_buffer;	
+	shift_buffer = (b1 << 16) | (b2 << 8) | b3;
+
+	if(shift_buffer == 0x31f031){
+		newGame = true;
+		printf("NewGame \n");
+	}
 }
 
 //Gets information from keyboard
@@ -6009,9 +6021,25 @@ int main(){
 				if (score < highscore[i]){
 					highscore[i] = score;
 					printf("New highscore!");
+					break;
 				}
 			}
-			// PUT NEWGAME IN HERE
+
+			while (!newGame){
+				PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
+				RVALID = PS2_data & 0x8000; // extract the RVALID field
+
+				if (RVALID) {
+					/* shift the next data byte into the display */
+					byte1 = byte2;
+					byte2 = byte3;
+					byte3 = PS2_data & 0xFF;
+					WIN_PS2(byte1, byte2, byte3);
+					if ((byte2 == (char)0xAA) && (byte3 == (char)0x00))
+						// mouse inserted; initialize sending of data
+						*(PS2_ptr) = 0xF4;
+				}
+			}
 		}
 	}
 	return 0;
