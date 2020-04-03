@@ -5455,7 +5455,7 @@ int posY[9] = {9, 33, 57, 82, 106, 130, 155, 179, 203}; //Pixel locations on gri
 int posX[9] = {8, 32, 56, 81, 105, 129, 154, 178, 202}; 
 int idX=0;
 int idY=0;
-bool newGame = false;
+bool newGame = true;
 volatile int pixelBufferStart; // global variable
 
 /************** Function Declarations *************/
@@ -5902,109 +5902,118 @@ bool checkValid(int Xindex, int Yindex){
 
 // debugging
 int main(){
+	// Program starts as new game
+    while (newGame){
+    	newGame = false;
+    	volatile int * pixelCtrlPtr = (int *)0xFF203020;
+    	/* Read location of the pixel buffer from the pixel buffer controller */
+    	pixelBufferStart = *pixelCtrlPtr;
     
-    volatile int * pixelCtrlPtr = (int *)0xFF203020;
-    /* Read location of the pixel buffer from the pixel buffer controller */
-    pixelBufferStart = *pixelCtrlPtr;
+    	create_grid();
+    	fill_grid(start);
     
-    create_grid();
-    fill_grid(start);
-    
-    // Create a copy of the completed array
-    for (int row = 0; row < SIZE; row++){
-    	for (int col = 0; col < SIZE; col++){
-    		solved[row][col] = start[row][col];
-    	}
-    }
-
-    int erase = 5 * SIZE; // Number of positions that will be blank
-    int row, col;
-    int temp;				// Keeps a backup of a position
-
-    while (erase > 0){
-    	// Choose random position to erase
-    	row = rand() % SIZE;
-    	col = rand() % SIZE;
-    	// If this position is already empty, choose another
-    	while (start[row][col] == UNASSIGNED){
-    		row = rand() % SIZE;
-    		col = rand() % SIZE;
-    	}
-    	temp = start[row][col];
-    	start[row][col] = UNASSIGNED;
-
-    	// Copy this grid
-    	int grid_copy[SIZE][SIZE];
+    	// Create a copy of the completed array
     	for (int row = 0; row < SIZE; row++){
     		for (int col = 0; col < SIZE; col++){
-    			grid_copy[row][col] = start[row][col];
+    			solved[row][col] = start[row][col];
     		}
     	}
-    	// Check for unique solution, if not, reroll a different number
-        soln_count = 0;
-        sudoku_solver(grid_copy);
-    	if (soln_count != 1) start[row][col] = temp;
- 		else erase--;
-    }
+    	int erase = 3; 			// Set as 3 for easier debugging
+    	//int erase = 5 * SIZE; // Number of positions that will be blank
+    	int row, col;
+    	int temp;				// Keeps a backup of a position
 
-    // Copy into given grid
-    for (int row = 0; row < SIZE; row++){
-        for (int col = 0; col < SIZE; col++){
-            if (start[row][col] == UNASSIGNED) given[row][col] = false;
-            else given[row][col] = true;
-        }
-    }
+    	while (erase > 0){
+    		// Choose random position to erase
+    		row = rand() % SIZE;
+    		col = rand() % SIZE;
+    		// If this position is already empty, choose another
+    		while (start[row][col] == UNASSIGNED){
+    			row = rand() % SIZE;
+    			col = rand() % SIZE;
+    		}
+    		temp = start[row][col];
+    		start[row][col] = UNASSIGNED;
+
+    		// Copy this grid
+    		int grid_copy[SIZE][SIZE];
+    		for (int row = 0; row < SIZE; row++){
+    			for (int col = 0; col < SIZE; col++){
+    				grid_copy[row][col] = start[row][col];
+    			}
+    		}
+    		// Check for unique solution, if not, reroll a different number
+        	soln_count = 0;
+        	sudoku_solver(grid_copy);
+    		if (soln_count != 1) start[row][col] = temp;
+ 			else erase--;
+    	}
+
+    	// Copy into given grid
+    	for (int row = 0; row < SIZE; row++){
+        	for (int col = 0; col < SIZE; col++){
+            	if (start[row][col] == UNASSIGNED) given[row][col] = false;
+            	else given[row][col] = true;
+        	}
+   		}
     ///////////////////////////////////
-    drawBackground(); //Draws the background
-    printf("Starting grid: \n");
-	print_grid(start);
-    draw_grid(start); //Draws the original board
-    printf("Fully solved grid: \n");
-    print_grid(solved);
-	
-	//CALL BACK FUNCTIONS
-	volatile int * PS2_ptr = (int *)0xff200100;
-	
-	int PS2_data, RVALID;
-	char byte1 = 0, byte2 = 0, byte3 = 0;
-	
-	// PS/2 mouse needs to be reset (must be already plugged in)
-	*(PS2_ptr) = 0xFF; // reset
-	
-	// Clock start (used to calculate score)
-	int start_t = time(NULL);
+	    drawBackground(); //Draws the background
+	    printf("Starting grid: \n");
+		print_grid(start);
+	    draw_grid(start); //Draws the original board
+	    printf("Fully solved grid: \n");
+	    print_grid(solved);
+		
+		//CALL BACK FUNCTIONS
+		volatile int * PS2_ptr = (int *)0xff200100;
+		
+		int PS2_data, RVALID;
+		char byte1 = 0, byte2 = 0, byte3 = 0;
+		
+		// PS/2 mouse needs to be reset (must be already plugged in)
+		*(PS2_ptr) = 0xFF; // reset
+		
+		// Clock start (used to calculate score)
+		int start_t = time(NULL);
 
-	// Game will continue until player wins
-	bool win = false;
-	while (!win) {
-		PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
-		RVALID = PS2_data & 0x8000; // extract the RVALID field
-		if (RVALID) {
-			/* shift the next data byte into the display */
-			byte1 = byte2;
-			byte2 = byte3;
-			byte3 = PS2_data & 0xFF;
-			HEX_PS2(byte1, byte2, byte3);
-			if ((byte2 == (char)0xAA) && (byte3 == (char)0x00))
-				// mouse inserted; initialize sending of data
-				*(PS2_ptr) = 0xF4;
+		// Game will continue until player wins
+		bool win = false;
+		while (!win) {
+			PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
+			RVALID = PS2_data & 0x8000; // extract the RVALID field
+			if (RVALID) {
+				/* shift the next data byte into the display */
+				byte1 = byte2;
+				byte2 = byte3;
+				byte3 = PS2_data & 0xFF;
+				HEX_PS2(byte1, byte2, byte3);
+				if ((byte2 == (char)0xAA) && (byte3 == (char)0x00))
+					// mouse inserted; initialize sending of data
+					*(PS2_ptr) = 0xF4;
+
+				// Check if new game pressed
+				if (newGame) break;
+			}
+			win = check_win(start);
 		}
-		win = check_win(start);
-	}
-	// Get time at game complete
-	int end_t = time(NULL);
-	int score = end_t - start_t;
+		// Skip these instructions if new game was pressed before game was finished
+		if (!newGame){
+			// Get time at game complete
+			int end_t = time(NULL);
+			int score = end_t - start_t;
 
-	printf("YOU'VE WON, CONGRATULATIONS\n");
-	printf("Your time is: %ds", score);
+			printf("YOU'VE WON, CONGRATULATIONS\n");
+			printf("Your time is: %ds", score);
 
-	for (int i=0; i<3; i++){
-		if (score < highscore[i]){
-			highscore[i] = score;
-			printf("New highscore!");
+			for (int i=0; i<3; i++){
+				if (score < highscore[i]){
+					highscore[i] = score;
+					printf("New highscore!");
+				}
+			}
+			// PUT NEWGAME IN HERE
 		}
 	}
-
-    return 0;
+	return 0;
 }
 	
