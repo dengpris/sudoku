@@ -5460,12 +5460,13 @@ volatile int pixelBufferStart; // global variable
 /************** Function Declarations *************/
 void create_grid();							// Creates empty 9x9 grid
 bool check_full(int grid[SIZE][SIZE]);		// Return true if grid is full
-int sudoku_solver(int grid[SIZE][SIZE]);	// Backtrack algorithm
+void sudoku_solver(int grid[SIZE][SIZE]);	// Backtrack algorithm
 bool is_legal(int grid[SIZE][SIZE], int row, int col, int number);
 bool fill_grid(int grid[SIZE][SIZE]);		// Create random grid of numbers
 void shuffle(int arr[SIZE]);				// Shuffle array of numbers
 void swap(int *a, int *b);					// Swap two variables
-void print_grid(int grid[SIZE][SIZE]);	
+void print_grid(int grid[SIZE][SIZE]);		// Print the board (debugging)
+bool check_win(int grid[SIZE][SIZE]);		// Check if the board is fully and correctly solved
 
 void drawBackground();  //Draws background
 void drawNewNumbers(int num, int xStart, int yStart); //drawsNewNumbers
@@ -5479,7 +5480,8 @@ void draw_grid(int grid[SIZE][SIZE]);	//draws grid
 void drawHighlight(int xStart, int yStart, short int colour);
 void clearHighlight(int xStart, int yStart, short int colour);
 void HEX_PS2(char, char, char);
-bool checkEmpty(int Xindex, int Yindex);
+bool checkEmpty(int Xindex, int Yindex); // Check if number can be drawn
+bool checkValid(int Xindex, int Yindex); // Check if number can be erased
 
 /*************** Function Definitions **************/
 
@@ -5528,7 +5530,7 @@ void swap(int *a, int *b){
 
 // Backtracking algorithm
 // Used to test if starting numbers can generate unique solution
-int sudoku_solver(int grid[SIZE][SIZE]){
+void sudoku_solver(int grid[SIZE][SIZE]){
 	int row, col;
 	for (int i = 0; i < GRID; i++){
 		row = i / SIZE;
@@ -5641,6 +5643,16 @@ bool fill_grid(int grid[SIZE][SIZE]){
 	return false;
 }
 
+// Checks if playing grid is same as solved grid
+bool check_win(int grid[SIZE][SIZE]){
+	for (int row = 0; row < SIZE; row++){
+		for (int col = 0; col < SIZE; col++){
+			if (grid[row][col] != solved[row][col]) return false;
+		}
+	}
+	return true;
+}
+
 //Draws grid on background
 void draw_grid(int grid[SIZE][SIZE]){
     for (int row = 0; row<SIZE; row++){
@@ -5720,37 +5732,66 @@ void HEX_PS2(char b1, char b2, char b3) {
 	//Write a number at selected position (select by arrowkes)
 	//Draw 1
 	if(shift_buffer == 0x16f016){ //Pressed 1
-		if(checkEmpty(idX,idY))drawNewNumbers(1, posX[idX], posY[idY]);
+		if(checkEmpty(idX,idY)){
+			drawNewNumbers(1, posX[idX], posY[idY]);
+			start[idY][idX] = 1;
+		}
 	//Draw 2
 	}else if(shift_buffer == 0x1ef01e){ //Pressed 2
-		if(checkEmpty(idX, idY))drawNewNumbers(2, posX[idX], posY[idY]);
+		if(checkEmpty(idX, idY)){
+			drawNewNumbers(2, posX[idX], posY[idY]);
+			start[idY][idX] = 2;
+		}
 	//Draw 3
 	}else if(shift_buffer == 0x26f026){ //Pressed 3
-		if(checkEmpty(idX, idY))drawNewNumbers(3, posX[idX], posY[idY]);
+		if(checkEmpty(idX, idY)){
+			drawNewNumbers(3, posX[idX], posY[idY]);
+			start[idY][idX] = 3;
+		}
 	//Draw 4
 	}else if(shift_buffer == 0x25f025){ //Pressed 4
-		if(checkEmpty(idX, idY))drawNewNumbers(4, posX[idX], posY[idY]);
+		if(checkEmpty(idX, idY)){
+			drawNewNumbers(4, posX[idX], posY[idY]);
+			start[idY][idX] = 4;
+		}
 	//Draw 5
 	}else if(shift_buffer == 0x2ef02e){ //Pressed 5
-		if(checkEmpty(idX, idY))drawNewNumbers(5, posX[idX], posY[idY]);
+		if(checkEmpty(idX, idY)){
+			drawNewNumbers(5, posX[idX], posY[idY]);
+			start[idY][idX] = 5;
+		}
 	//Draw 6
 	}else if(shift_buffer == 0x36f036){ //Pressed 6
-		if(checkEmpty(idX, idY))drawNewNumbers(6, posX[idX], posY[idY]);
+		if(checkEmpty(idX, idY)){
+			drawNewNumbers(6, posX[idX], posY[idY]);
+			start[idY][idX] = 6;
+		}
 	//Draw 7
 	}else if(shift_buffer == 0x3df03d){ //Pressed 7
-		if(checkEmpty(idX, idY))drawNewNumbers(7, posX[idX], posY[idY]);
+		if(checkEmpty(idX, idY)){
+			drawNewNumbers(7, posX[idX], posY[idY]);
+			start[idY][idX] = 7;
+		}
 	//Draw 8
 	}else if(shift_buffer == 0x3ef03e){ //Pressed 8
-		if(checkEmpty(idX, idY))drawNewNumbers(8, posX[idX], posY[idY]);
+		if(checkEmpty(idX, idY)){
+			drawNewNumbers(8, posX[idX], posY[idY]);
+			start[idY][idX] = 8;
+		}
 	//Draw 9
 	}else if(shift_buffer == 0x46f046){ //Pressed 9
-		if(checkEmpty(idX, idY))drawNewNumbers(9, posX[idX], posY[idY]);
-	}
-	
+		if(checkEmpty(idX, idY)){
+			drawNewNumbers(9, posX[idX], posY[idY]);
+			start[idY][idX] = 9;
+		}
+	}	
 	//Erase a number at selected position (select by arrowkeys)
 	else if(shift_buffer == 0x66f066){
 		// The number 0 draws a blank square
-		if(checkEmpty(idX,idY))drawNewNumbers(0, posX[idX], posY[idY]);
+		if(checkValid(idX,idY)){
+			drawNewNumbers(0, posX[idX], posY[idY]);
+			start[idY][idX] = UNASSIGNED;
+		}
 	}
 	
 	//Selecting Box in Grid 
@@ -5840,11 +5881,14 @@ void clearHighlight(int xStart, int yStart, short int colour){
 	}
 }
 
-bool checkEmpty(int Xindex, int Yindex)
-{
-	if( start[Yindex][Xindex] != 0){
-		return false;
-	}
+bool checkEmpty(int Xindex, int Yindex){
+	if( given[Yindex][Xindex] ) return false;					// Cannot change starting value
+	if ( start[Yindex][Xindex] != UNASSIGNED) return false;		// Cannot change without erasing first
+	return true;
+}
+
+bool checkValid(int Xindex, int Yindex){
+	if (given[Yindex][Xindex]) return false;					// Cannot erase starting value
 	return true;
 }
 
@@ -5910,7 +5954,7 @@ int main(){
     draw_grid(start); //Draws the original board
     printf("Fully solved grid: \n");
     print_grid(solved);
-	printf("Full Grid: \n");
+	//printf("Full Grid: \n");
 	
 	//CALL BACK FUNCTIONS
 	volatile int * PS2_ptr = (int *)0xff200100;
@@ -5921,7 +5965,12 @@ int main(){
 	// PS/2 mouse needs to be reset (must be already plugged in)
 	*(PS2_ptr) = 0xFF; // reset
 	
-	while (1) {
+	// Clock start (used to calculate score)
+	int start_t = time(NULL);
+
+	// Game will continue until player wins
+	bool win = false;
+	while (!win) {
 		PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
 		RVALID = PS2_data & 0x8000; // extract the RVALID field
 		if (RVALID) {
@@ -5934,7 +5983,14 @@ int main(){
 				// mouse inserted; initialize sending of data
 				*(PS2_ptr) = 0xF4;
 		}
+		win = check_win(start);
 	}
+	// Get time at game complete
+	int end_t = time(NULL);
+	int score = end_t - start_t;
+
+	printf("YOU'VE WON, CONGRATULATIONS\n");
+	printf("Your time is: %ds", score);
     return 0;
 }
 	
