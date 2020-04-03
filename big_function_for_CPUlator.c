@@ -5447,6 +5447,7 @@ int solved[SIZE][SIZE]; // Fully solved
 bool given[SIZE][SIZE];
 int soln_count;
 int refresh = 0;
+int highscore[3] = {9999, 9999, 9999};
 
 int SCREEN_WIDTH = 320; //X
 int SCREEN_HEIGHT = 240; //Y
@@ -5954,7 +5955,6 @@ int main(){
     draw_grid(start); //Draws the original board
     printf("Fully solved grid: \n");
     print_grid(solved);
-	//printf("Full Grid: \n");
 	
 	//CALL BACK FUNCTIONS
 	volatile int * PS2_ptr = (int *)0xff200100;
@@ -5991,6 +5991,14 @@ int main(){
 
 	printf("YOU'VE WON, CONGRATULATIONS\n");
 	printf("Your time is: %ds", score);
+
+	for (int i=0; i<3; i++){
+		if (score < highscore[i]){
+			highscore[i] = score;
+			printf("New highscore!");
+		}
+	}
+
     return 0;
 }
 	
