@@ -5455,7 +5455,7 @@ int posY[9] = {9, 33, 57, 82, 106, 130, 155, 179, 203}; //Pixel locations on gri
 int posX[9] = {8, 32, 56, 81, 105, 129, 154, 178, 202}; 
 int idX=0;
 int idY=0;
-
+bool newGame = false;
 volatile int pixelBufferStart; // global variable
 
 /************** Function Declarations *************/
@@ -5798,7 +5798,7 @@ void HEX_PS2(char b1, char b2, char b3) {
 	//Selecting Box in Grid 
 	else if(shift_buffer == 0xe0f074){  //Go Right (light up LED4-0)
 		if((idX)>=0 && idX != 8){
-			clearHighlight(idX,idY, 0xd77f);
+			clearHighlight(idX,idY, 0xffff);
 		}
 		if((idX+1)<9){
 			idX++;
@@ -5806,28 +5806,34 @@ void HEX_PS2(char b1, char b2, char b3) {
 		}
 	}else if(shift_buffer == 0xe0f06b){ //Go Left (light up LED9-5)
 		if((idX)<9 && idX != 0){
-			clearHighlight(idX,idY, 0xeedf);
+			clearHighlight(idX,idY, 0xffff);
 		}
 		if((idX-1)>=0){
 			idX--;
-			drawHighlight(idX,idY, 0xC4BF);
+			drawHighlight(idX,idY, 0x96bf);
 		}
 	}else if(shift_buffer == 0xe0f075){ //Go Up (light up LED5-4)
 		if((idY)<9 && idY != 0){
-			clearHighlight(idX,idY, 0xeedf);
+			clearHighlight(idX,idY, 0xffff);
 		}
 		if((idY-1)>=0){
 			idY--;
-			drawHighlight(idX,idY, 0xC4BF);
+			drawHighlight(idX,idY, 0x96bf);
 		}
 	}else if(shift_buffer == 0xe0f072){ //Go Down (light up LED9 & LED0)
 		if((idY)>=0 && idY != 8){
-			clearHighlight(idX,idY, 0xd77f);
+			clearHighlight(idX,idY, 0xffff);
 		}
 		if((idY+1)<9){
 			idY++;
 			drawHighlight(idX,idY, 0x96bf);
 		}
+	}
+	
+	//If N is pressed, make newgame
+	else if(shift_buffer == 0x31f031){
+		newGame = true;
+		printf("NewGame \n");
 	}
 	
 	for (i = 0; i < 6; ++i) {
