@@ -6103,8 +6103,7 @@ int main(){
 	// Program starts as new game
     while (newGame){
     	newGame = false;
-    	if (!firstGame){
-    
+    	if (!firstGame){ 	// Ensures that program does not try to draw the first game twice  
 	    	create_grid();
 	    	fill_grid(start);
 	    
@@ -6187,7 +6186,7 @@ int main(){
 			PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
 			RVALID = PS2_data & 0x8000; // extract the RVALID field
 			
-			//drawMouse(mouseX, mouseY, 0x701f);
+			drawMouse(mouseX, mouseY, 0x701f);
 			
 			if (RVALID) {
 				// shift the next data byte into the display 
