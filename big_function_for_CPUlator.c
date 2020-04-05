@@ -5759,7 +5759,7 @@ void MOUSE_PS2(char b1, char b2, char b3) {
 
     //THE SHIFT BUFFER IS THE DATA INPUT. THIS IS THE IMPORTANT ONE.
     shift_buffer = (b1 << 16) | (b2 << 8) | b3;
-    printf("Testing b1: %x and b2: %x, and b3: %x \n", b1,b2,b3);
+  //  printf("Testing b1: %x and b2: %x, and b3: %x \n", b1,b2,b3);
 
     unsigned int currXMovement = b2;
     unsigned int currYMovement = b3;
@@ -6117,9 +6117,10 @@ int main(){
 			// Get time at game complete
 			int end_t = time(NULL);
 			int score = end_t - start_t;
-
+			//printf("1 - Your time is: %ds \n", score);
 			printf("YOU'VE WON, CONGRATULATIONS\n");
-			printf("Your time is: %ds", score);
+			//printf("\n\nIm here!\n\n");
+			printf("2 - Your time is: %ds \n", score);
 
 			for (int i=0; i<3; i++){
 				if (score < highscore[i]){
