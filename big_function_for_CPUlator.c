@@ -5473,12 +5473,13 @@ void swap(int *a, int *b);					// Swap two variables
 void print_grid(int grid[SIZE][SIZE]);		// Print the board (debugging)
 bool check_win(int grid[SIZE][SIZE]);		// Check if the board is fully and correctly solved
 
-void drawBackground();  //Draws background
-void drawNewNumbers(int num, int xStart, int yStart); //drawsNewNumbers
-void drawOriginalNumbers(int num, int xStart, int yStart); //drawsOriginalNumbers
-void clearScreen(); //Draws black screen 
+void drawBackground(); 										//Draws background
+void drawNewNumbers(int num, int xStart, int yStart); 		//drawsNewNumbers
+void drawOriginalNumbers(int num, int xStart, int yStart); 	//drawsOriginalNumbers
+void clearScreen(); 										//Draws black screen 
 void plotPixel(int x, int y, short int lineColor);
-void draw_grid(int grid[SIZE][SIZE]);	//draws grid
+void draw_grid(int grid[SIZE][SIZE]);						//draws grid
+void wait();												// Back buffer
 
 
 //Keyboard functions:
@@ -6012,71 +6013,161 @@ bool checkValid(int Xindex, int Yindex){
 	return true;
 }
 
+void wait() {
+    volatile int* pixelCtrlPtr = (int*)0xFF203020;
+    volatile int* status = (int*)0xFF20302C;
+    // Write to Buffer
+    *pixelCtrlPtr = 1;
+
+    // Read while status is 1
+    while ((*status & 0x01) != 0) {
+        status = status;
+    }
+    // Exit when synchronized
+    return;
+}
+
 
 // debugging
-int main(){
+int main(){  
+	volatile int * pixelCtrlPtr = (int *)0xFF203020;
+	pixelBufferStart = *pixelCtrlPtr;
+
+	create_grid();
+	fill_grid(start);
+
+	// Create a copy of the completed array
+	for (int row = 0; row < SIZE; row++){
+		for (int col = 0; col < SIZE; col++){
+			solved[row][col] = start[row][col];
+		}
+	}
+
+	int erase = 3; 			// Set as 3 for easier debugging
+	//int erase = 5 * SIZE; // Number of positions that will be blank
+	int row, col;
+	int temp;				// Keeps a backup of a position
+
+	while (erase > 0){
+		// Choose random position to erase
+		row = rand() % SIZE;
+		col = rand() % SIZE;
+		// If this position is already empty, choose another
+		while (start[row][col] == UNASSIGNED){
+			row = rand() % SIZE;
+			col = rand() % SIZE;
+		}
+		temp = start[row][col];
+		start[row][col] = UNASSIGNED;
+
+		// Copy this grid
+		int grid_copy[SIZE][SIZE];
+		for (int row = 0; row < SIZE; row++){
+			for (int col = 0; col < SIZE; col++){
+				grid_copy[row][col] = start[row][col];
+			}
+		}
+		// Check for unique solution, if not, reroll a different number
+    	soln_count = 0;
+    	sudoku_solver(grid_copy);
+		if (soln_count != 1) start[row][col] = temp;
+			else erase--;
+	}
+
+	// Copy into given grid
+	for (int row = 0; row < SIZE; row++){
+    	for (int col = 0; col < SIZE; col++){
+        	if (start[row][col] == UNASSIGNED) given[row][col] = false;
+        	else given[row][col] = true;
+    	}
+	}
+
+    drawBackground(); //Draws the background
+
+    printf("Starting grid: \n");
+	print_grid(start);
+    draw_grid(start); //Draws the original board
+
+    printf("Fully solved grid: \n");
+    print_grid(solved);    	
+
+    /* Read location of the pixel buffer from the pixel buffer controller */
+    *(pixelCtrlPtr + 1) = 0xC8000000; 		// Store address in back buffer
+	wait();									// Swap front/back buffers
+	pixelBufferStart = *(pixelCtrlPtr); 
+    *(pixelCtrlPtr + 1) = 0xC0000000;
+	pixelBufferStart = *(pixelCtrlPtr + 1); // we draw on the back buffer
+
+	bool firstGame = true;
+
 	// Program starts as new game
     while (newGame){
     	newGame = false;
-    	volatile int * pixelCtrlPtr = (int *)0xFF203020;
-    	/* Read location of the pixel buffer from the pixel buffer controller */
-    	pixelBufferStart = *pixelCtrlPtr;
+    	if (!firstGame){
     
-    	create_grid();
-    	fill_grid(start);
-    
-    	// Create a copy of the completed array
-    	for (int row = 0; row < SIZE; row++){
-    		for (int col = 0; col < SIZE; col++){
-    			solved[row][col] = start[row][col];
-    		}
-    	}
-    	int erase = 3; 			// Set as 3 for easier debugging
-    	//int erase = 5 * SIZE; // Number of positions that will be blank
-    	int row, col;
-    	int temp;				// Keeps a backup of a position
+	    	create_grid();
+	    	fill_grid(start);
+	    
+	    	// Create a copy of the completed array
+	    	for (int row = 0; row < SIZE; row++){
+	    		for (int col = 0; col < SIZE; col++){
+	    			solved[row][col] = start[row][col];
+	    		}
+	    	}
 
-    	while (erase > 0){
-    		// Choose random position to erase
-    		row = rand() % SIZE;
-    		col = rand() % SIZE;
-    		// If this position is already empty, choose another
-    		while (start[row][col] == UNASSIGNED){
-    			row = rand() % SIZE;
-    			col = rand() % SIZE;
-    		}
-    		temp = start[row][col];
-    		start[row][col] = UNASSIGNED;
+	    	int erase = 3; 			// Set as 3 for easier debugging
+	    	//int erase = 5 * SIZE; // Number of positions that will be blank
+	    	int row, col;
+	    	int temp;				// Keeps a backup of a position
 
-    		// Copy this grid
-    		int grid_copy[SIZE][SIZE];
-    		for (int row = 0; row < SIZE; row++){
-    			for (int col = 0; col < SIZE; col++){
-    				grid_copy[row][col] = start[row][col];
-    			}
-    		}
-    		// Check for unique solution, if not, reroll a different number
-        	soln_count = 0;
-        	sudoku_solver(grid_copy);
-    		if (soln_count != 1) start[row][col] = temp;
- 			else erase--;
-    	}
+	    	while (erase > 0){
+	    		// Choose random position to erase
+	    		row = rand() % SIZE;
+	    		col = rand() % SIZE;
+	    		// If this position is already empty, choose another
+	    		while (start[row][col] == UNASSIGNED){
+	    			row = rand() % SIZE;
+	    			col = rand() % SIZE;
+	    		}
+	    		temp = start[row][col];
+	    		start[row][col] = UNASSIGNED;
 
-    	// Copy into given grid
-    	for (int row = 0; row < SIZE; row++){
-        	for (int col = 0; col < SIZE; col++){
-            	if (start[row][col] == UNASSIGNED) given[row][col] = false;
-            	else given[row][col] = true;
-        	}
-   		}
-    ///////////////////////////////////
-	    drawBackground(); //Draws the background
-	    printf("Starting grid: \n");
-		print_grid(start);
-	    draw_grid(start); //Draws the original board
-	    printf("Fully solved grid: \n");
-	    print_grid(solved);
-		
+	    		// Copy this grid
+	    		int grid_copy[SIZE][SIZE];
+	    		for (int row = 0; row < SIZE; row++){
+	    			for (int col = 0; col < SIZE; col++){
+	    				grid_copy[row][col] = start[row][col];
+	    			}
+	    		}
+	    		// Check for unique solution, if not, reroll a different number
+	        	soln_count = 0;
+	        	sudoku_solver(grid_copy);
+	    		if (soln_count != 1) start[row][col] = temp;
+	 			else erase--;
+	    	}
+
+	    	// Copy into given grid
+	    	for (int row = 0; row < SIZE; row++){
+	        	for (int col = 0; col < SIZE; col++){
+	            	if (start[row][col] == UNASSIGNED) given[row][col] = false;
+	            	else given[row][col] = true;
+	        	}
+	   		}
+
+		    drawBackground(); //Draws the background
+
+		    //wait();
+		    //pixelBufferStart = *(pixelCtrlPtr + 1);
+
+		    printf("Starting grid: \n");
+			print_grid(start);
+		    draw_grid(start); //Draws the original board
+
+		    printf("Fully solved grid: \n");
+		    print_grid(solved);    	
+
+		}
+
 		//CALL BACK FUNCTIONS
 		volatile int * PS2_ptr = (int *)0xff200100;
 		
@@ -6092,13 +6183,14 @@ int main(){
 		// Game will continue until player wins
 		bool win = false;
 		while (!win) {
+
 			PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
 			RVALID = PS2_data & 0x8000; // extract the RVALID field
 			
-			drawMouse(mouseX, mouseY, 0x701f);
+			//drawMouse(mouseX, mouseY, 0x701f);
 			
 			if (RVALID) {
-				/* shift the next data byte into the display */
+				// shift the next data byte into the display 
 				byte1 = byte2;
 				byte2 = byte3;
 				byte3 = PS2_data & 0xFF;
@@ -6135,7 +6227,7 @@ int main(){
 				RVALID = PS2_data & 0x8000; // extract the RVALID field
 
 				if (RVALID) {
-					/* shift the next data byte into the display */
+					// shift the next data byte into the display 
 					byte1 = byte2;
 					byte2 = byte3;
 					byte3 = PS2_data & 0xFF;
@@ -6146,6 +6238,9 @@ int main(){
 				}
 			}
 		}
+		firstGame = false;
+		wait();
+	    pixelBufferStart = *(pixelCtrlPtr + 1);
 	}
 	return 0;
 }
