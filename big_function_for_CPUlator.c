@@ -6561,6 +6561,7 @@ int main(){
 		    timer = time(NULL)-start_t;
 			printf("Timer: %d\n", timer);
 		   	drawTimer(timer);
+		   	//END DRAWING TIMER
 
 			PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
 			RVALID = PS2_data & 0x8000; // extract the RVALID field
