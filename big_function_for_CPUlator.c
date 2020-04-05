@@ -5455,6 +5455,10 @@ int posY[9] = {9, 33, 57, 82, 106, 130, 155, 179, 203}; //Pixel locations on gri
 int posX[9] = {8, 32, 56, 81, 105, 129, 154, 178, 202}; 
 int idX=0;
 int idY=0;
+int mouseX=240;
+int mouseY=190;
+char XMovement = 0x00;
+char YMovement = 0x00;
 bool newGame = true;
 volatile int pixelBufferStart; // global variable
 
@@ -5481,9 +5485,12 @@ void draw_grid(int grid[SIZE][SIZE]);	//draws grid
 void drawHighlight(int xStart, int yStart, short int colour);
 void clearHighlight(int xStart, int yStart, short int colour);
 void WIN_PS2(char b1, char b2, char b3);
-void HEX_PS2(char, char, char);
+void HEX_PS2(char b1, char b2, char b3);
+void MOUSE_PS2(char b1, char b2, char b3);
 bool checkEmpty(int Xindex, int Yindex); // Check if number can be drawn
 bool checkValid(int Xindex, int Yindex); // Check if number can be erased
+void drawMouse(int x, int y, short int colour);
+void clearMouse(int x, int y);
 
 /*************** Function Definitions **************/
 
@@ -5711,6 +5718,29 @@ void drawBackground(){
 		}
     }
 }
+
+void drawMouse(int x, int y, short int colour){
+
+    for(int i = x; i<4+x; i++){
+        for(int j = y ; j<4+y; j++){
+            plotPixel(i, j, colour);
+        }
+    }
+}
+
+void clearMouse(int x, int y){
+
+    for(int i = x; i<4+x; i++){
+        for(int j = y ; j<4+y; j++){
+			
+			int colour = (j)*SCREEN_WIDTH + i;
+			
+            plotPixel(i, j, Background[colour]);
+        }
+    }
+}
+
+
 // Gets information from keyboard in game win state
 void WIN_PS2(char b1, char b2, char b3){
 	
@@ -5721,6 +5751,74 @@ void WIN_PS2(char b1, char b2, char b3){
 		newGame = true;
 		printf("NewGame \n");
 	}
+}
+
+void MOUSE_PS2(char b1, char b2, char b3) {
+
+    unsigned int shift_buffer, nibble;
+
+    //THE SHIFT BUFFER IS THE DATA INPUT. THIS IS THE IMPORTANT ONE.
+    shift_buffer = (b1 << 16) | (b2 << 8) | b3;
+    printf("Testing b1: %x and b2: %x, and b3: %x \n", b1,b2,b3);
+
+    unsigned int currXMovement = b2;
+    unsigned int currYMovement = b3;
+
+	if(b1==0x09){
+		printf("Clicked at x: %d y: %d \n",mouseX, mouseY);
+		if(265 <= mouseX && mouseX <= 302 && 178 <= mouseY && mouseY <= 206){
+		    newGame = true;
+			printf("\nNEW GAME!\n");
+		}
+	}
+	
+    if((currXMovement > XMovement)  && (b1 == 0x08 || b1 == 0x28 || b1 == 0x48|| b1 == 0x68|| b1 == 0x88|| b1 == 0xa8|| b1 == 0xc8|| b1 == 0xe8)) {
+
+        if((mouseX+2)<320){
+            mouseX = mouseX +2;
+            drawMouse(mouseX,mouseY, 0xffff);
+        }
+        if((mouseX-2)>=0 && mouseX-2 != 320){
+            clearMouse(mouseX-2,mouseY);
+        }
+    }
+    else if((currXMovement > XMovement) && (b1 == 0x18 || b1 == 0x38|| b1 == 0x58|| b1 == 0x78 || b1 == 0x98|| b1 == 0xb8|| b1 == 0xd8|| b1 == 0xf8 )){
+        printf("LEFT! prv: %d, curr: %d\n", XMovement, currXMovement);
+
+        if((mouseX-2)>=0){
+            mouseX = mouseX-2;
+            drawMouse(mouseX,mouseY, 0x96bf);
+        }
+        if((mouseX+2)<320 && mouseX+2 != 0){
+            clearMouse(mouseX+2,mouseY);
+        }
+    }
+
+    if((currYMovement > YMovement)&& (b1 == 0x08 || b1 == 0x18 || b1 == 0x48|| b1 == 0x58|| b1 == 0x88|| b1 == 0x98|| b1 == 0xc8|| b1 == 0xd8) ){
+
+        printf("\nDOWN!\n");
+
+        if((mouseY+2)<240){
+            mouseY = mouseY+2;
+            drawMouse(mouseX,mouseY, 0x96bf);
+        }
+        if((mouseY-2)>=0 && mouseY-2 != 240){
+            clearMouse(mouseX,mouseY-2);
+        }
+    }
+    else if(((currYMovement > YMovement) && (b1 == 0x28 || b1 == 0x38|| b1 == 0x68|| b1 == 0x78 || b1 == 0xa8|| b1 == 0xb8|| b1 == 0xe8|| b1 == 0xf8 ))){
+
+        printf("\nUP!\n");
+        if((mouseY-2)>=0){
+            mouseY = mouseY-2;
+            drawMouse(mouseX,mouseY, 0xC4BF);
+        }
+        if((mouseY)<240 && mouseY != 0){
+            clearMouse(mouseX,mouseY+2);
+        }
+    }
+    XMovement = currXMovement;
+    YMovement = currYMovement;
 }
 
 //Gets information from keyboard
@@ -5741,6 +5839,9 @@ void HEX_PS2(char b1, char b2, char b3) {
 	int i;
 	
 	shift_buffer = (b1 << 16) | (b2 << 8) | b3;
+	
+	//SETS MOUSE IF WE'RE USING A MOUSE
+	MOUSE_PS2(b1, b2, b3);
 	
 	//Write a number at selected position (select by arrowkes)
 	//Draw 1
@@ -5993,6 +6094,9 @@ int main(){
 		while (!win) {
 			PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
 			RVALID = PS2_data & 0x8000; // extract the RVALID field
+			
+			drawMouse(mouseX, mouseY, 0x701f);
+			
 			if (RVALID) {
 				/* shift the next data byte into the display */
 				byte1 = byte2;

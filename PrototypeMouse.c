@@ -4901,25 +4901,8 @@ void HEX_PS2(char b1, char b2, char b3) {
     shift_buffer = (b1 << 16) | (b2 << 8) | b3;
     printf("Testing b1: %x and b2: %x, and b3: %x \n", b1,b2,b3);
 
-    unsigned int clicked = b1 & 0x0f;
     unsigned int currXMovement = b2;
     unsigned int currYMovement = b3;
-    //Checks sign of x
-    unsigned int Sign = b1 & 0x10;
-
-    char left, right, middle, xsign, ysign, xover, yover;
-
-    //Button states
-    left = !(b1 & 0x01);
-    right = !((b1<<1)&0x01);
-    middle = !((b1>>2)&0x01);
-    // Sign bits
-    xsign  =   (b1>>4)&0x01 ;
-    ysign  =   (b1>>5)&0x01 ;
-    // Overflow bits (not handled)
-    xover  =   (b1>>6)&0x01 ;
-    yover  =   (b1>>7)&0x01 ;
-
 
 	if(b1==0x09){
 		printf("Clicked at x: %d y: %d \n",mouseX, mouseY);
@@ -4975,9 +4958,6 @@ void HEX_PS2(char b1, char b2, char b3) {
     }
     XMovement = currXMovement;
     YMovement = currYMovement;
-
-    if(shift_buffer == 0x29f029)printf("\n\nKEYBOARD!\n\n");
-
 }
 
 void plotPixel(int x, int y, short int lineColor){
