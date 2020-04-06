@@ -6396,6 +6396,7 @@ void wait() {
 int main(){  
 	volatile int * pixelCtrlPtr = (int *)0xFF203020;
 	pixelBufferStart = *pixelCtrlPtr;
+	drawBackground();
 
 	create_grid();
 	fill_grid(start);
@@ -6446,7 +6447,7 @@ int main(){
     	}
 	}
 
-    drawBackground(); //Draws the background
+    //drawBackground(); //Draws the background
 
     printf("Starting grid: \n");
 	print_grid(start);
@@ -6455,10 +6456,13 @@ int main(){
     printf("Fully solved grid: \n");
     print_grid(solved);    	
 
-    /* Read location of the pixel buffer from the pixel buffer controller */
+	/* Read location of the pixel buffer from the pixel buffer controller */
     *(pixelCtrlPtr + 1) = 0xC8000000; 		// Store address in back buffer
 	wait();									// Swap front/back buffers
 	pixelBufferStart = *(pixelCtrlPtr); 
+
+	draw_grid(start);
+
     *(pixelCtrlPtr + 1) = 0xC0000000;
 	pixelBufferStart = *(pixelCtrlPtr + 1); // we draw on the back buffer
 
@@ -6467,7 +6471,9 @@ int main(){
 	// Program starts as new game
     while (newGame){
     	newGame = false;
-    	if (!firstGame){ 	// Ensures that program does not try to draw the first game twice  
+    	if (!firstGame){ 	// Ensures that program does not try to draw the first game twice
+    		// Start writing to back buffer
+    		pixelBufferStart = *(pixelCtrlPtr + 1);
 	    	create_grid();
 	    	fill_grid(start);
 	    
@@ -6519,9 +6525,6 @@ int main(){
 
 		    drawBackground(); //Draws the background
 
-		    //wait();
-		    //pixelBufferStart = *(pixelCtrlPtr + 1);
-
 		    printf("Starting grid: \n");
 			print_grid(start);
 			
@@ -6554,22 +6557,20 @@ int main(){
 
          int prev_time = timer;
 		
-        wait(); //MJ ADDED THIS WAIT
-		
+		// Replace buffers
+        wait();
+
 		// Game will continue until player wins
 		bool win = false;
 		while (!win) {
 		    
 			//MJ'S DRAWING TIMER
 		    timer = time(NULL)-start_t;
+		    // Only draw timer if the seconds have changed
 		    if (prev_time != timer){
 		    	prev_time++;
 		    	drawTimer(timer);
-		    	printf("Timer: %d\n", timer);
 		    }
-
-		   	//drawTimer(timer);
-		   	//END DRAWING TIMER
 
 			PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
 			RVALID = PS2_data & 0x8000; // extract the RVALID field
@@ -6593,9 +6594,9 @@ int main(){
 			win = check_win(start);
 		
 		}
-		wait();
 		// Skip these instructions if new game was pressed before game was finished
 		if (!newGame){
+			wait();
 			// Get time at game complete
 			int end_t = time(NULL);
 			int score = end_t - start_t;
@@ -6629,8 +6630,6 @@ int main(){
 			}
 		}
 		firstGame = false;
-		wait();
-	    pixelBufferStart = *(pixelCtrlPtr + 1);
 	}
 	return 0;
 }
