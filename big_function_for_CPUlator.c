@@ -5832,23 +5832,26 @@ void drawTimer(int timer)
 	//printf("drawTimer: %d\n",timer);
     int oneSec, tenSec,oneMin, tenMin, temp; 
     if(timer < 60){
-        tenSec = timer %10;
-        oneSec = timer - tenSec*10;
-        drawTimerNumbers(oneSec, 0);
-        drawTimerNumbers(tenSec,1);
-    }else{
+		oneSec = timer%10;
+		tenSec = (int)timer /10;
+		printf("tenSec = %d oneSec = %d\n",tenSec, oneSec);
+		drawTimerNumbers(oneSec, 3);
+		drawTimerNumbers(tenSec,2);
+	}else{
+		
         temp = timer % 60;
-        tenMin = temp % 10;
-        oneMin = temp - tenMin*10;
-        temp = timer - temp*60;
-        tenSec = temp %10;
-        oneSec = temp - tenSec*10;
+		oneSec = temp %10;
+		tenSec = (int) temp/10;
+		
+		temp = (int)(timer/60);
+		oneMin = temp % 10;
+        tenMin = (int) temp / 10;
+		printf("%dTIME %d %d : %d %d\n", timer, tenMin, oneMin, tenSec, oneSec);
         drawTimerNumbers(tenMin, 0);
         drawTimerNumbers(oneMin,1);
         drawTimerNumbers(tenSec, 2);
         drawTimerNumbers(oneSec,3);
     }
-//	printf("TIME %d %d : %d %d\n", tenMin, oneMin, tenSec, oneSec);
 }
 
 void drawTimerNumbers(int digit, int index){
