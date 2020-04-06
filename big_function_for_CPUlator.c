@@ -6545,11 +6545,14 @@ int main(){
 		int start_t = time(NULL);
         
 		//MJ'S INITIALIZING TIMER
+
         timer = 0;
          drawTimerNumbers(0,0);
          drawTimerNumbers(0,1);
          drawTimerNumbers(0,2);
          drawTimerNumbers(0,3);
+
+         int prev_time = timer;
 		
         wait(); //MJ ADDED THIS WAIT
 		
@@ -6559,8 +6562,13 @@ int main(){
 		    
 			//MJ'S DRAWING TIMER
 		    timer = time(NULL)-start_t;
-			printf("Timer: %d\n", timer);
-		   	drawTimer(timer);
+		    if (prev_time != timer){
+		    	prev_time++;
+		    	drawTimer(timer);
+		    	printf("Timer: %d\n", timer);
+		    }
+
+		   	//drawTimer(timer);
 		   	//END DRAWING TIMER
 
 			PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
