@@ -7898,18 +7898,18 @@ int main(){
 			wait();
 			
 			while (!newGame){
-				//drawTimer(&timer);
+				drawTimer(&timer);
 				//clearTypeHighScore();
 				
-				//if((wonX -DXwon) > 0 && (wonY -DYwon) >0){
-				//	clearX = wonX - DXwon;
-				//	clearY = wonY - DYwon;
-				//}
+				if((wonX -DXwon) > 0 && (wonY -DYwon) >0){
+					clearX = wonX - DXwon;
+					clearY = wonY - DYwon;
+				}
 			
-				//clearWonBox(clearX, clearY);
-				//updateWonBox();
+				clearWonBox(clearX, clearY);
+				updateWonBox();
 				drawWonBox(wonX, wonY);
-				//wait();
+				wait();
 				// swap front and back buffers on VGA vertical sync
         		pixelBufferStart = *(pixelCtrlPtr + 1); // new back buffer
 				
