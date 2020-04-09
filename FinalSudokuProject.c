@@ -16,6 +16,8 @@
 #define SUBSIZE    3
 #define GRID 	   81
 
+#define DIFFICULTY 45 //CHANGE THIS VALUE TO 3 TO SIMPLIFY THE GAME
+	
 // How it works:
 // We solve the sudoku by assigning one number at a time the empty cells
 // Check for safety, if valid, assign the number.
@@ -6825,6 +6827,9 @@ const unsigned short HighScore[6825]={
 
 
 /**************** Global Variables ****************/
+
+
+
 int start[SIZE][SIZE];  // Erased 
 int solved[SIZE][SIZE]; // Fully solved
 bool given[SIZE][SIZE];
@@ -6847,6 +6852,7 @@ unsigned int typeLetter[27] = {0x66f066/*BACKSPACE*/, 0x1cf01c, 0x32f032, 0x21f0
 int enteredLetters[3];
 bool newHighScore;
 int numLettersTyped = 0;
+int numLettersTyped_part2 = 0;
 int highScorePlace = -1;
 int savedGrid[6825];
 int prvXIndex = 0;
@@ -6854,6 +6860,8 @@ int prvYIndex = 0;
 
 int idX=0;
 int idY=0;
+int idX_part2=0;
+int idY_part2=0;
 int mouseX=240;
 int mouseY=190;
 int timer = 0;
@@ -6894,6 +6902,7 @@ void clearWonBox(int x, int y);
 void drawLetter(bool load, int place, int pos, int character);
 void drawHighScore();
 void clearTypeHighScore();
+void HIGHSCORE_PS2_part2(char b1, char b2, char b3);
 void HIGHSCORE_PS2(char b1, char b2, char b3);
 void drawMouseBackground();
 
@@ -6901,7 +6910,8 @@ void drawMouseBackground();
 void drawHighlight(int xStart, int yStart, short int colour);
 void clearHighlight(int xStart, int yStart, short int colour);
 void WIN_PS2(char b1, char b2, char b3);
-void HEX_PS2(char b1, char b2, char b3);
+bool HEX_PS2(char b1, char b2, char b3);
+void HEX_PS2_part2(char b1, char b2, char b3, bool valid);
 void MOUSE_PS2(char b1, char b2, char b3);
 bool checkEmpty(int Xindex, int Yindex); // Check if number can be drawn
 bool checkValid(int Xindex, int Yindex); // Check if number can be erased
@@ -7215,8 +7225,6 @@ void HIGHSCORE_PS2(char b1, char b2, char b3){
 	unsigned int shift_buffer;	
 	shift_buffer = (b1 << 16) | (b2 << 8) | b3;
 	
-	//MOUSE_PS2(b1,b2,b3);
-	
 	if(newHighScore && numLettersTyped<3){
 	    if(shift_buffer == typeLetter[0]){ //If backspace is Pressed
             drawLetter(false, highScorePlace, numLettersTyped-1, 0);
@@ -7227,13 +7235,11 @@ void HIGHSCORE_PS2(char b1, char b2, char b3){
     	            drawLetter(false, highScorePlace, numLettersTyped, i);
     	            enteredLetters[numLettersTyped] = i;
                     numLettersTyped++;
-					printf("NumLettersTyped: %d\n", numLettersTyped);
     	            break;
     	        }
 	        }
 	    }
 	}else if(newHighScore && numLettersTyped == 3){
-		printf("I have entered! NumLettersTyped: %d\n", numLettersTyped);
 	    if(shift_buffer == typeLetter[0]){ //If backspace is Pressed
             drawLetter(false, highScorePlace, numLettersTyped-1, 0);
             numLettersTyped--;
@@ -7242,12 +7248,43 @@ void HIGHSCORE_PS2(char b1, char b2, char b3){
 	        drawLetter(true, highScorePlace, 0, enteredLetters[0]);
 	        drawLetter(true, highScorePlace, 1, enteredLetters[1]);
 	        drawLetter(true, highScorePlace, 2, enteredLetters[2]);
-			//clearTypeHighScore();
+	    }
+	}
+}
+// Gets information from keyboard in game win state
+void HIGHSCORE_PS2_part2(char b1, char b2, char b3){
+	
+	unsigned int shift_buffer;	
+	shift_buffer = (b1 << 16) | (b2 << 8) | b3;
+	
+	
+	if(newHighScore && numLettersTyped_part2<3){
+	    if(shift_buffer == typeLetter[0]){ //If backspace is Pressed
+            drawLetter(false, highScorePlace, numLettersTyped_part2-1, 0);
+            numLettersTyped_part2--;
+	    }else{
+	        for(int i = 0; i<27; i++){
+    	        if(shift_buffer == typeLetter[i]){
+    	            drawLetter(false, highScorePlace, numLettersTyped_part2, i);
+    	            enteredLetters[numLettersTyped_part2] = i;
+                    numLettersTyped_part2++;
+    	            break;
+    	        }
+	        }
+	    }
+	}else if(newHighScore && numLettersTyped_part2 == 3){
+	    if(shift_buffer == typeLetter[0]){ //If backspace is Pressed
+            drawLetter(false, highScorePlace, numLettersTyped_part2-1, 0);
+            numLettersTyped_part2--;
+	    }
+	    else if(shift_buffer == 0x5af05a){ //pressing enter
+	        drawLetter(true, highScorePlace, 0, enteredLetters[0]);
+	        drawLetter(true, highScorePlace, 1, enteredLetters[1]);
+	        drawLetter(true, highScorePlace, 2, enteredLetters[2]);
 	        newHighScore = false;
 	    }
 	}
 }
-
 // Gets information from keyboard in game win state
 void WIN_PS2(char b1, char b2, char b3){
 	
@@ -7258,27 +7295,21 @@ void WIN_PS2(char b1, char b2, char b3){
 
 	if(shift_buffer == 0x31f031){
 		newGame = true;
-		printf("NewGame \n");
 	}
 	
 }
 
 void MOUSE_PS2(char b1, char b2, char b3) {
-	
-   // printf("Testing b1: %x and b2: %x, and b3: %x \n", b1,b2,b3);
 
     unsigned int currXMovement = b2;
     unsigned int currYMovement = b3;
 
 	if(b1==0x09){
-		//printf("Clicked at x: %d y: %d \n",mouseX, mouseY);
 		if(265 <= mouseX && mouseX <= 302 && 178 <= mouseY && mouseY <= 206){
 		    newGame = true;
-			printf("\nNEW GAME!\n");
 		}
 		int xIndex = 0; 
 		int yIndex = 0;
-		printf("Clicked at x: %d y: %d \n",mouseX, mouseY);
 		for(int xCheck = 0; xCheck<220; xCheck+=24){
 			for(int yCheck = 0; yCheck<220; yCheck+=24){
 				
@@ -7291,7 +7322,6 @@ void MOUSE_PS2(char b1, char b2, char b3) {
 					idY = yIndex;
 				}
 				yIndex++;
-				printf("Xindex: %d, Yindex: %d\n",xIndex, yIndex);
 			}
 			xIndex++;
 			yIndex =0;
@@ -7310,7 +7340,6 @@ void MOUSE_PS2(char b1, char b2, char b3) {
         }
     }
     else if((currXMovement > XMovement) && (b1 == 0x18 || b1 == 0x38|| b1 == 0x58|| b1 == 0x78 || b1 == 0x98|| b1 == 0xb8|| b1 == 0xd8|| b1 == 0xf8 )){
-        printf("LEFT! prv: %d, curr: %d\n", XMovement, currXMovement);
 
         if((mouseX-2)>=0){
             mouseX = mouseX-2;
@@ -7323,8 +7352,6 @@ void MOUSE_PS2(char b1, char b2, char b3) {
 
     if((currYMovement > YMovement)&& (b1 == 0x08 || b1 == 0x18 || b1 == 0x48|| b1 == 0x58|| b1 == 0x88|| b1 == 0x98|| b1 == 0xc8|| b1 == 0xd8) ){
 
-        printf("\nDOWN!\n");
-
         if((mouseY+2)<240){
             mouseY = mouseY+2;
             drawMouse(mouseX,mouseY, 0x96bf);
@@ -7335,7 +7362,6 @@ void MOUSE_PS2(char b1, char b2, char b3) {
     }
     else if(((currYMovement > YMovement) && (b1 == 0x28 || b1 == 0x38|| b1 == 0x68|| b1 == 0x78 || b1 == 0xa8|| b1 == 0xb8|| b1 == 0xe8|| b1 == 0xf8 ))){
 
-        printf("\nUP!\n");
         if((mouseY-2)>=0){
             mouseY = mouseY-2;
             drawMouse(mouseX,mouseY, 0xC4BF);
@@ -7346,18 +7372,19 @@ void MOUSE_PS2(char b1, char b2, char b3) {
     }
     XMovement = currXMovement;
     YMovement = currYMovement;
-	
 }
 
 //Gets information from keyboard
-void HEX_PS2(char b1, char b2, char b3) {
+bool HEX_PS2(char b1, char b2, char b3) {
 	
+	bool to_return = false;
+
 	unsigned int shift_buffer;
 	
 	shift_buffer = (b1 << 16) | (b2 << 8) | b3;
 	
 	//SETS MOUSE IF WE'RE USING A MOUSE
-	MOUSE_PS2(b1, b2, b3);
+	//MOUSE_PS2(b1, b2, b3);
 	
 	//Write a number at selected position (select by arrowkes)
 	//Draw 1
@@ -7365,54 +7392,63 @@ void HEX_PS2(char b1, char b2, char b3) {
 		if(checkEmpty(idX,idY)){
 			drawNewNumbers(1, posX[idX], posY[idY]);
 			start[idY][idX] = 1;
+			to_return = true;
 		}
 	//Draw 2
 	}else if(shift_buffer == 0x1ef01e){ //Pressed 2
 		if(checkEmpty(idX, idY)){
 			drawNewNumbers(2, posX[idX], posY[idY]);
 			start[idY][idX] = 2;
+			to_return = true;
 		}
 	//Draw 3
 	}else if(shift_buffer == 0x26f026){ //Pressed 3
 		if(checkEmpty(idX, idY)){
 			drawNewNumbers(3, posX[idX], posY[idY]);
 			start[idY][idX] = 3;
+			to_return = true;
 		}
 	//Draw 4
 	}else if(shift_buffer == 0x25f025){ //Pressed 4
 		if(checkEmpty(idX, idY)){
 			drawNewNumbers(4, posX[idX], posY[idY]);
 			start[idY][idX] = 4;
+			to_return = true;
 		}
 	//Draw 5
 	}else if(shift_buffer == 0x2ef02e){ //Pressed 5
 		if(checkEmpty(idX, idY)){
 			drawNewNumbers(5, posX[idX], posY[idY]);
 			start[idY][idX] = 5;
+			to_return = true;
 		}
 	//Draw 6
 	}else if(shift_buffer == 0x36f036){ //Pressed 6
 		if(checkEmpty(idX, idY)){
 			drawNewNumbers(6, posX[idX], posY[idY]);
 			start[idY][idX] = 6;
+			to_return = true;
 		}
 	//Draw 7
 	}else if(shift_buffer == 0x3df03d){ //Pressed 7
 		if(checkEmpty(idX, idY)){
 			drawNewNumbers(7, posX[idX], posY[idY]);
 			start[idY][idX] = 7;
+			to_return = true;
 		}
 	//Draw 8
 	}else if(shift_buffer == 0x3ef03e){ //Pressed 8
 		if(checkEmpty(idX, idY)){
 			drawNewNumbers(8, posX[idX], posY[idY]);
 			start[idY][idX] = 8;
+			to_return = true;
 		}
 	//Draw 9
 	}else if(shift_buffer == 0x46f046){ //Pressed 9
 		if(checkEmpty(idX, idY)){
 			drawNewNumbers(9, posX[idX], posY[idY]);
 			start[idY][idX] = 9;
+			to_return = true;
 		}
 	}	
 	//Erase a number at selected position (select by arrowkeys)
@@ -7421,6 +7457,7 @@ void HEX_PS2(char b1, char b2, char b3) {
 		if(checkValid(idX,idY)){
 			drawNewNumbers(0, posX[idX], posY[idY]);
 			start[idY][idX] = UNASSIGNED;
+			to_return = true;
 		}
 	}
 	
@@ -7464,6 +7501,93 @@ void HEX_PS2(char b1, char b2, char b3) {
 		newGame = true;
 		printf("NewGame \n");
 	}
+	return to_return;
+}
+
+// hex part 2 for double buffering
+void HEX_PS2_part2(char b1, char b2, char b3, bool valid){
+	
+	unsigned int shift_buffer;
+	
+	shift_buffer = (b1 << 16) | (b2 << 8) | b3;
+	
+	//SETS MOUSE IF WE'RE USING A MOUSE
+	MOUSE_PS2(b1, b2, b3);
+	
+	if (valid){
+	//Write a number at selected position (select by arrowkes)
+	//Draw 1
+	if(shift_buffer == 0x16f016){ //Pressed 1
+			drawNewNumbers(1, posX[idX_part2], posY[idY_part2]);
+	//Draw 2
+	}else if(shift_buffer == 0x1ef01e){ //Pressed 2
+			drawNewNumbers(2, posX[idX_part2], posY[idY_part2]);
+
+	//Draw 3
+	}else if(shift_buffer == 0x26f026){ //Pressed 3
+			drawNewNumbers(3, posX[idX_part2], posY[idY_part2]);
+	//Draw 4
+	}else if(shift_buffer == 0x25f025){ //Pressed 4
+			drawNewNumbers(4, posX[idX_part2], posY[idY_part2]);
+
+	//Draw 5
+	}else if(shift_buffer == 0x2ef02e){ //Pressed 5
+			drawNewNumbers(5, posX[idX_part2], posY[idY_part2]);
+
+	//Draw 6
+	}else if(shift_buffer == 0x36f036){ //Pressed 6
+			drawNewNumbers(6, posX[idX_part2], posY[idY_part2]);
+
+	//Draw 7
+	}else if(shift_buffer == 0x3df03d){ //Pressed 7
+			drawNewNumbers(7, posX[idX_part2], posY[idY_part2]);
+	//Draw 8
+	}else if(shift_buffer == 0x3ef03e){ //Pressed 8
+			drawNewNumbers(8, posX[idX_part2], posY[idY_part2]);
+	//Draw 9
+	}else if(shift_buffer == 0x46f046){ //Pressed 9
+			drawNewNumbers(9, posX[idX_part2], posY[idY_part2]);
+	}	
+	//Erase a number at selected position (select by arrowkeys)
+	else if(shift_buffer == 0x66f066){
+		// The number 0 draws a blank square
+			drawNewNumbers(0, posX[idX_part2], posY[idY_part2]);
+
+	}
+	}	//Selecting Box in Grid 
+	else if(shift_buffer == 0xe0f074){  //Go Right (light up LED4-0)
+		if((idX_part2)>=0 && idX_part2 != 8){
+			clearHighlight(idX_part2,idY_part2, 0xffff);
+		}
+		if((idX_part2+1)<9){
+			idX_part2++;
+			drawHighlight(idX_part2,idY_part2, 0x96bf);
+		}
+	}else if(shift_buffer == 0xe0f06b){ //Go Left (light up LED9-5)
+		if((idX_part2)<9 && idX_part2 != 0){
+			clearHighlight(idX_part2,idY_part2, 0xffff);
+		}
+		if((idX_part2-1)>=0){
+			idX_part2--;
+			drawHighlight(idX_part2,idY_part2, 0x96bf);
+		}
+	}else if(shift_buffer == 0xe0f075){ //Go Up (light up LED5-4)
+		if((idY_part2)<9 && idY_part2 != 0){
+			clearHighlight(idX_part2,idY_part2, 0xffff);
+		}
+		if((idY_part2-1)>=0){
+			idY_part2--;
+			drawHighlight(idX_part2,idY_part2, 0x96bf);
+		}
+	}else if(shift_buffer == 0xe0f072){ //Go Down (light up LED9 & LED0)
+		if((idY_part2)>=0 && idY_part2 != 8){
+			clearHighlight(idX_part2,idY_part2, 0xffff);
+		}
+		if((idY_part2+1)<9){
+			idY_part2++;
+			drawHighlight(idX_part2,idY_part2, 0x96bf);
+		}
+	}
 }
 
 //Draw highlight
@@ -7472,7 +7596,7 @@ void drawHighlight(int xStart, int yStart, short int colour){
 	yStart = posY[yStart];
 	xStart--;
 	yStart--;
-	//short int colour = 0x96bf;
+	
 	for(int y=yStart ; y<23+yStart ;y++){
 		if(y == yStart || y == yStart+1 ||y == 21+yStart || y == 22+yStart){
 			for(int x = xStart; x<23+xStart; x++){
@@ -7648,7 +7772,7 @@ void drawLetter(bool load, int place, int pos, int character)
 			int mouseIdx = y*SCREEN_WIDTH + x;
 			
 			if(load){ //permanently places it in the background
-				printf("Re-wrtiting the background\n");
+				
 			    Background[mouseIdx] = letter[character][colourIdx];
 				plotPixel(x, y, letter[character][colourIdx]);
 				mouseBackground[mouseIdx] = letter[character][colourIdx];
@@ -7661,15 +7785,10 @@ void drawLetter(bool load, int place, int pos, int character)
 			colourIdx++;
 		}
     }
-	printf("Place: %d Num Letter: %d\n",place, numLettersTyped);
 }
 
 // debugging
 int main(){
-	
-	volatile int * pixelCtrlPtr = (int *)0xFF203020;
-	pixelBufferStart = *pixelCtrlPtr;
-	drawBackground();
 
 	create_grid();
 	fill_grid(start);
@@ -7681,8 +7800,9 @@ int main(){
 		}
 	}
 
-	int erase = 3; 			// Set as 3 for easier debugging
-	//int erase = 5 * SIZE; // Number of positions that will be blank
+	
+	int erase = DIFFICULTY; 		
+	
 	int row, col;
 	int temp;				// Keeps a backup of a position
 
@@ -7720,7 +7840,9 @@ int main(){
     	}
 	}
 
-    //drawBackground(); //Draws the background
+	volatile int * pixelCtrlPtr = (int *)0xFF203020;
+	pixelBufferStart = *pixelCtrlPtr;
+	drawBackground();
 
     printf("Starting grid: \n");
 	print_grid(start);
@@ -7734,22 +7856,23 @@ int main(){
 	wait();									// Swap front/back buffers
 	pixelBufferStart = *(pixelCtrlPtr); 
 
+	drawBackground();
 	draw_grid(start);
 
     *(pixelCtrlPtr + 1) = 0xC0000000;
 	pixelBufferStart = *(pixelCtrlPtr + 1); // we draw on the back buffer
+	
 
 	bool firstGame = true;
-
 	// Program starts as new game
-    while (newGame){
+    while (true){
+    	//cin <<
     	newGame = false;
     	highScorePlace = -1;
     	newHighScore = false;
     	numLettersTyped = 0;
     	if (!firstGame){ 	// Ensures that program does not try to draw the first game twice
     		// Start writing to back buffer
-    		pixelBufferStart = *(pixelCtrlPtr + 1);
 	    	create_grid();
 	    	fill_grid(start);
 	    
@@ -7760,8 +7883,7 @@ int main(){
 	    		}
 	    	}
 
-	    	int erase = 3; 			// Set as 3 for easier debugging
-	    	//int erase = 5 * SIZE; // Number of positions that will be blank
+	    	int erase = DIFFICULTY; 			
 	    	int row, col;
 	    	int temp;				// Keeps a backup of a position
 
@@ -7799,15 +7921,13 @@ int main(){
 	        	}
 	   		}
 
-		    drawBackground(); //Draws the background
+			drawBackground();
+			draw_grid(start);
 
-		    printf("Starting grid: \n");
-			print_grid(start);
-			
-		    draw_grid(start); //Draws the original board
-
-		    printf("Fully solved grid: \n");
-		    print_grid(solved);  
+		    wait();
+			pixelBufferStart = *(pixelCtrlPtr + 1); // we draw on the back buffer
+			drawBackground();
+			draw_grid(start);
 
 		}
 
@@ -7824,6 +7944,8 @@ int main(){
 		int start_t = time(NULL);
         
 		//MJ'S INITIALIZING TIMER
+        wait();
+        pixelBufferStart = *(pixelCtrlPtr+1);
 
         timer = 0;
          drawTimerNumbers(0,0);
@@ -7834,13 +7956,18 @@ int main(){
          int prev_time = timer;
 		
 		// Replace buffers
-        wait();
+ 		wait();
+        pixelBufferStart = *(pixelCtrlPtr+1);
+         drawTimerNumbers(0,0);
+         drawTimerNumbers(0,1);
+         drawTimerNumbers(0,2);
+         drawTimerNumbers(0,3);
 
 		// Game will continue until player wins
 		bool win = false;
 		while (!win) {
 		    
-			//MJ'S DRAWING TIMER
+			//DRAWING TIMER
 		    timer = time(NULL)-start_t;
 		    // Only draw timer if the seconds have changed
 		    if (prev_time != timer){
@@ -7852,22 +7979,27 @@ int main(){
 			RVALID = PS2_data & 0x8000; // extract the RVALID field
 			
 			drawMouse(mouseX, mouseY, 0x701f);
+
+			wait();
+			pixelBufferStart = *(pixelCtrlPtr+1);
+			drawTimer(&timer);	
 			
 			if (RVALID) {
 				// shift the next data byte into the display 
 				byte1 = byte2;
 				byte2 = byte3;
 				byte3 = PS2_data & 0xFF;
-				HEX_PS2(byte1, byte2, byte3);
-				//wait();
-				int c,d;
-				  for ( c = 1; c <= 100; c++){
-					   for (d = 1; d <= 100; d++)
-					   {}
-				  }
+				bool valid = HEX_PS2(byte1, byte2, byte3);
+				
+
+				wait();
+				pixelBufferStart = *(pixelCtrlPtr+1);
+				HEX_PS2_part2(byte1, byte2, byte3, valid);
+
 				if ((byte2 == (char)0xAA) && (byte3 == (char)0x00))
 					// mouse inserted; initialize sending of data
 					*(PS2_ptr) = 0xF4;
+
 
 				// Check if new game pressed
 				if (newGame) break;
@@ -7887,7 +8019,8 @@ int main(){
 			printf("YOU'VE WON, CONGRATULATIONS\n");
 			
 			printf("Your time is: %ds \n", score);
-
+			wait();
+			pixelBufferStart = *(pixelCtrlPtr+1);
 			for (int i=0; i<3; i++){
 				if (score < highscore[i]){
 					highscore[i] = score;
@@ -7896,6 +8029,11 @@ int main(){
 					highScorePlace = i;
 					newHighScore = true;
 					numLettersTyped = 0;
+
+					wait();
+					pixelBufferStart = *(pixelCtrlPtr+1);
+					drawHighScore();
+
 					break;
 				}
 			}
@@ -7910,39 +8048,48 @@ int main(){
 					byte2 = byte3;
 					byte3 = PS2_data & 0xFF;
 					HIGHSCORE_PS2(byte1, byte2, byte3);
+
+					wait();
+					pixelBufferStart = *(pixelCtrlPtr+1);
+					HIGHSCORE_PS2_part2(byte1, byte2, byte3);
+
 					if ((byte2 == (char)0xAA) && (byte3 == (char)0x00))
-						// mouse inserted; initialize sending of data
+						
 						*(PS2_ptr) = 0xF4;
 				}
-				//if(!newHighScore){
-				//	wait();
-					// swap front and back buffers on VGA vertical sync
-					//pixelBufferStart = *(pixelCtrlPtr + 1); // new back buffer
-				//}
 				
 			}
+			wait();
+			pixelBufferStart = *(pixelCtrlPtr+1);
 			clearTypeHighScore();
 			drawMouseBackground();
-			drawWonBox(48,101);
-			//wait();
+
+			wait();
+			pixelBufferStart = *(pixelCtrlPtr+1);
+			clearTypeHighScore();
+			drawMouseBackground();
+
 			
 			while (!newGame){
-				//drawTimer(&timer);
+				drawTimer(&timer);
 				
+				if((wonX -DXwon) > 0 && (wonY -DYwon) >0){
+					clearX = wonX - DXwon;
+					clearY = wonY - DYwon;
+				}
 				
+				wait();
+				pixelBufferStart = *(pixelCtrlPtr + 1); 
+				clearWonBox(clearX, clearY);
+				updateWonBox();
+				drawWonBox(wonX, wonY);
 				
-				//if((wonX -DXwon) > 0 && (wonY -DYwon) >0){
-				//	clearX = wonX - DXwon;
-				//	clearY = wonY - DYwon;
-				//}
-			
-				//clearWonBox(clearX, clearY);
-				//updateWonBox();
-				//drawWonBox(wonX, wonY);
-				//wait();
+				wait();
 				// swap front and back buffers on VGA vertical sync
-        		//pixelBufferStart = *(pixelCtrlPtr + 1); // new back buffer
-				
+        		pixelBufferStart = *(pixelCtrlPtr + 1); // new back buffer
+				clearWonBox(clearX, clearY);
+				//updateWonBox();
+				drawWonBox(wonX, wonY);
 				
 				PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
 				RVALID = PS2_data & 0x8000; // extract the RVALID field
@@ -7961,9 +8108,6 @@ int main(){
 		}
 		firstGame = false;
 	}
-	//drawBackground();
-	//clearTypeHighScore();
-	//drawMouseBackground();
 	return 0;
 }
 	
