@@ -7890,7 +7890,6 @@ int main(){
     	numLettersTyped = 0;
     	if (!firstGame){ 	// Ensures that program does not try to draw the first game twice
     		// Start writing to back buffer
-    		pixelBufferStart = *(pixelCtrlPtr + 1);
 	    	create_grid();
 	    	fill_grid(start);
 	    
@@ -7940,15 +7939,16 @@ int main(){
 	        	}
 	   		}
 
-		    drawBackground(); //Draws the background
+			//wait();									// Swap front/back buffers
+			//pixelBufferStart = *(pixelCtrlPtr); 
 
-		    printf("Starting grid: \n");
-			print_grid(start);
-			
-		    draw_grid(start); //Draws the original board
+			drawBackground();
+			draw_grid(start);
 
-		    printf("Fully solved grid: \n");
-		    print_grid(solved);  
+		    wait();
+			pixelBufferStart = *(pixelCtrlPtr + 1); // we draw on the back buffer
+			drawBackground();
+			draw_grid(start);
 
 		}
 
