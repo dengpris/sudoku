@@ -2,6 +2,7 @@
 Sudoku project for ECE243
 
 Game can be played by compiling big_function_for_CPUlator.c on CPUlator. 
+
 Game is controlled using PS_2 (base address of 0xff200100).
 
 ## Usage 
