@@ -1,5 +1,5 @@
 # sudoku
-Sudoku project for ECE243
+Sudoku project for ECE243, written in C.
 
 Game can be played by compiling big_function_for_CPUlator.c on CPUlator. 
 
