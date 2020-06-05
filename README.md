@@ -1,9 +1,18 @@
 # sudoku
 Sudoku project for ECE243
 
-big_function_for_CPUlator is for compiling on CPUlator. Make sure ALL code is included.
-Control with PS_2 (base address of 0xff200100) 
-If using, keyboard: use arrowkeys to maneuver the grid, press N for new game, press backspace to erase
-You can also use mouse, just to select New (for a new game). 
+Game can be played by compiling big_function_for_CPUlator.c on CPUlator. 
+Game is controlled using PS_2 (base address of 0xff200100).
+
+# Usage 
+## Keyboard
+- Arrowkeys used to maneuver the grid,
+- Fill the grid using the number keys 
+- Press N for new game
+- Press backspace to erase
+## Mouse
+- Mouse support greatly lags due to limits of CPUlator
+- Currently only supports mouse-click of "New Game"
 
 Other files are broken down merely for organizational purposes.
+All games are randomly generated.
